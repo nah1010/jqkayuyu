@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kho Addon Minecraft</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-dark: #059669;
+  --bg-main: #f1f5f9;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #cbd5e1;
+  --rainbow: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+  --danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  padding-bottom: 80px;
+  min-height: 100vh;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.logo svg {
+  width: 32px;
+  height: 32px;
+  fill: var(--primary);
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 38px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+}
+
+.search-box svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  fill: var(--text-muted);
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.category-section {
+  margin-bottom: 28px;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid var(--primary);
+  padding-left: 8px;
+}
+
+.slider-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.addon-slider {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.addon-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.addon-card {
+  min-width: 160px;
+  max-width: 160px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+@media (min-width: 768px) {
+  .addon-card {
+    min-width: 200px;
+    max-width: 200px;
+  }
+}
+
+.addon-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.15);
+}
+
+.card-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.card-delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.addon-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  background-color: var(--border);
+}
+
+.addon-info {
+  padding: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.addon-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.addon-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.dot.active {
+  background: var(--primary);
+  transform: scale(1.2);
+}
+
+.rainbow-badge {
+  background: var(--rainbow);
+  background-size: 200% auto;
+  color: #fff;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  animation: rainbowGlow 3s linear infinite;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@keyframes rainbowGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.popular-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.popular-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .popular-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 90;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 33.33%;
+  height: 100%;
+  justify-content: center;
+}
+
+.nav-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.rainbow-star {
+  fill: url(#rainbow-grad) !important;
+}
+
+.floating-container {
+  position: fixed;
+  bottom: 75px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 95;
+}
+
+.floating-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.floating-btn:hover {
+  transform: scale(1.08);
+}
+
+.floating-btn.zalo-btn {
+  background-color: #0068ff;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  padding: 16px;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.close-x {
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+}
+
+.modal-body {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--border);
+  color: var(--text-main);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.link-green {
+  color: var(--primary);
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text-main);
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 300;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<svg style="width:0;height:0;position:absolute;">
+  <linearGradient id="rainbow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#ff0000" />
+    <stop offset="20%" stop-color="#ff7f00" />
+    <stop offset="40%" stop-color="#ffff00" />
+    <stop offset="60%" stop-color="#00ff00" />
+    <stop offset="80%" stop-color="#0000ff" />
+    <stop offset="100%" stop-color="#8b00ff" />
+  </linearGradient>
+</svg>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+    MC-ADDONS
+  </div>
+  <div class="search-box">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    <input type="text" id="searchInput" placeholder="Tìm kiếm addon..." onkeyup="handleSearch(event)">
+  </div>
+</header>
+
+<div class="main-content">
+  <div id="tabHome" class="tab-pane active"></div>
+
+  <div id="tabPopular" class="tab-pane">
+    <div class="popular-banner">
+      <div class="rainbow-badge" style="font-size: 16px; margin-bottom: 8px;">
+        ★ BANG HỘI POPULAR ★
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted);">Sắp xếp theo số lượt xem và độ yêu thích của cộng đồng!</p>
+    </div>
+    <div id="popularContent"></div>
+  </div>
+
+  <div id="tabDownloaded" class="tab-pane">
+    <div class="category-title">
+      <svg style="width:20px;height:20px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Addon Đã Tải Về
+    </div>
+    <div id="downloadedContent" class="popular-list"></div>
+  </div>
+</div>
+
+<div class="floating-container">
+  <button id="adminBtn" class="floating-btn" style="display:none;" onclick="openPostModal()" title="Đăng Addon mới">
+    <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+  </button>
+  <button id="zaloBtn" class="floating-btn zalo-btn" onclick="openZaloModal()">
+    <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5L2 22l5.1-1.32C8.5 21.52 10.2 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+  </button>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('tabHome', this)">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <span>Trang chủ</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tabPopular', this)">
+    <svg class="rainbow-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+    <span class="rainbow-badge">Nổi tiếng</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tabDownloaded', this)">
+    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    <span>Đã tải</span>
+  </button>
+</nav>
+
+<div id="welcomeModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>🎉 KHAI TRƯƠNG WEBSITE 🎉</span>
+      <button class="close-x" onclick="closeWelcomeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Chào mừng bạn đã đến với web của tôi! Web chúng tôi sẵn sàng phục vụ bạn mọi addon khi bạn cần.</p>
+      <br>
+      <p>Chúc bạn có trải nghiệm tuyệt vời nhất, tải addon cực nhanh và khám phá muôn vàn thế giới Minecraft cực đỉnh cùng chúng tôi!</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideWelcomeModal()">Ẩn luôn</button>
+      <button class="btn btn-primary" onclick="closeWelcomeModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="zaloModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Thông Tin Liên Hệ & Báo Lỗi</span>
+      <button class="close-x" onclick="closeZaloModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 10px;"><strong>Liên hệ 2 admin:</strong></p>
+      <p style="margin-bottom: 6px;">• XuanPhi: <span class="link-green" onclick="copyPhone('0368622960')">Ở đây</span></p>
+      <p style="margin-bottom: 14px;">• TanCraft: <span style="color:var(--text-muted);">( chưa cập nhật )</span></p>
+      <p>Vào nhóm để có thể trò chuyện, chia sẻ addon :D <a href="https://zalo.me/g/pjjit6ojygdrwgywxxrt" target="_blank" class="link-green">Link ở đây</a></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideZaloBubble()">Ẩn</button>
+      <button class="btn btn-primary" onclick="closeZaloModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="loginModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Đăng Nhập Quản Trị Viên</span>
+      <button class="close-x" onclick="closeLoginModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tài khoản</label>
+        <input type="text" id="loginUser">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <input type="password" id="loginPass">
+      </div>
+      <p id="loginErr" style="color:#ef4444; font-size:12px; display:none;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeLoginModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitLogin()">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
+<div id="postModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Đăng Addon Mới</span>
+      <button class="close-x" onclick="closePostModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên Addon (tối đa 30 chữ) *</label>
+        <input type="text" id="postTitle" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label>Link Addon (Gồm link vượt & link gốc) *</label>
+        <input type="text" id="postLink" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>Thể loại *</label>
+        <select id="postCat">
+          <option value="Hỗ trợ sinh tồn">Hỗ trợ sinh tồn</option>
+          <option value="Giải trí">Giải trí</option>
+          <option value="Shader">Shader</option>
+          <option value="Map">Map</option>
+          <option value="Linh tinh🌚">Linh tinh🌚</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ảnh Addon (tối đa 2MB)</label>
+        <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
+      </div>
+      <div class="form-group">
+        <label>Mô tả Addon</label>
+        <textarea id="postDesc"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:100%;" onclick="submitPost()">Đăng</button>
+    </div>
+  </div>
+</div>
+
+<div id="detailModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span id="detailTitle">Tên Addon</span>
+      <button class="close-x" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="detailImg" src="" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:12px;">
+      <p id="detailCat" style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:6px;"></p>
+      <p id="detailDesc" style="white-space:pre-wrap; color:var(--text-muted);"></p>
+    </div>
+    <div class="modal-footer" id="detailFooter">
+      <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const U_ENC = "TWluaFF1YW4=";
+const P_ENC = "WHVhbnBoaTI3MDhA";
+
+const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Linh tinh🌚"];
+
+let initialAddons = [];
+
+let addons = JSON.parse(localStorage.getItem('mc_addons_data')) || initialAddons;
+let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
+let loginAttempts = 0;
+let uploadedImgBase64 = "";
+let selectedAddonId = null;
+let isAdmin = false;
+
+function saveStore() {
+  localStorage.setItem('mc_addons_data', JSON.stringify(addons));
+  localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
+}
+
+window.onload = function() {
+  if(!localStorage.getItem('welcome_hidden')) {
+    document.getElementById('welcomeModal').classList.add('active');
+  }
+  renderHome();
+  renderPopular();
+  renderDownloaded();
+};
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function copyPhone(num) {
+  navigator.clipboard.writeText(num).then(() => {
+    showToast("Đã sao chép số điện thoại: " + num);
+  });
+}
+
+function closeWelcomeModal() {
+  document.getElementById('welcomeModal').classList.remove('active');
+}
+
+function hideWelcomeModal() {
+  localStorage.setItem('welcome_hidden', 'true');
+  closeWelcomeModal();
+}
+
+function openZaloModal() {
+  document.getElementById('zaloModal').classList.add('active');
+}
+
+function closeZaloModal() {
+  document.getElementById('zaloModal').classList.remove('active');
+}
+
+function hideZaloBubble() {
+  closeZaloModal();
+  document.getElementById('zaloBtn').style.display = 'none';
+}
+
+function openPostModal() {
+  document.getElementById('postModal').classList.add('active');
+}
+
+function closePostModal() {
+  document.getElementById('postModal').classList.remove('active');
+}
+
+function openLoginModal() {
+  document.getElementById('loginModal').classList.add('active');
+}
+
+function closeLoginModal() {
+  document.getElementById('loginModal').classList.remove('active');
+  document.getElementById('searchInput').value = '';
+}
+
+function handleSearch(e) {
+  let val = e.target.value.trim();
+  if (e.key === 'Enter') {
+    if (val === 'SignUpAdmin') {
+      openLoginModal();
+      return;
+    }
+  }
+  filterBySearch(val);
+}
+
+function filterBySearch(q) {
+  if (!q) {
+    renderHome();
+    return;
+  }
+  let filtered = addons.filter(a => a.title.toLowerCase().includes(q.toLowerCase()));
+  let container = document.getElementById('tabHome');
+  container.innerHTML = '<div class="category-title">Kết quả tìm kiếm</div>';
+  if(filtered.length === 0) {
+    container.innerHTML += '<div class="empty-state">Không tìm thấy addon nào</div>';
+    return;
+  }
+  let grid = document.createElement('div');
+  grid.className = 'popular-list';
+  filtered.forEach(item => grid.appendChild(createCard(item)));
+  container.appendChild(grid);
+}
+
+function submitLogin() {
+  if (loginAttempts >= 3) {
+    document.getElementById('loginErr').innerText = "Thất bại quá 3 lần! Đã khóa đăng nhập.";
+    document.getElementById('loginErr').style.display = 'block';
+    return;
+  }
+
+  let u = document.getElementById('loginUser').value;
+  let p = document.getElementById('loginPass').value;
+
+  if (btoa(u) === U_ENC && btoa(p) === P_ENC) {
+    isAdmin = true;
+    closeLoginModal();
+    document.getElementById('adminBtn').style.display = 'flex';
+    showToast("Đăng nhập Admin thành công!");
+    renderHome();
+    renderPopular();
+    renderDownloaded();
+  } else {
+    loginAttempts++;
+    let err = document.getElementById('loginErr');
+    err.innerText = `Sai tài khoản/mật khẩu! (${loginAttempts}/3 lần)`;
+    err.style.display = 'block';
+  }
+}
+
+function deleteAddon(id, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  if (!confirm("Bạn có chắc chắn muốn xóa addon này không?")) return;
+
+  addons = addons.filter(a => a.id !== id);
+  downloadedIds = downloadedIds.filter(dId => dId !== id);
+  saveStore();
+
+  closeDetailModal();
+  renderHome();
+  renderPopular();
+  renderDownloaded();
+  showToast("Đã xóa addon thành công!");
+}
+
+function handleImgUpload(e) {
+  let file = e.target.files[0];
+  if (file) {
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ảnh không được vượt quá 2MB!");
+      e.target.value = "";
+      return;
+    }
+    let reader = new FileReader();
+    reader.onload = function(evt) {
+      uploadedImgBase64 = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function submitPost() {
+  let title = document.getElementById('postTitle').value.trim();
+  let link = document.getElementById('postLink').value.trim();
+  let cat = document.getElementById('postCat').value;
+  let desc = document.getElementById('postDesc').value.trim();
+
+  if (!title || title.length > 30) {
+    alert("Tên addon bắt buộc nhập và không quá 30 chữ!");
+    return;
+  }
+  if (!link) {
+    alert("Vui lòng nhập link đường dẫn addon!");
+    return;
+  }
+
+  let newAddon = {
+    id: Date.now(),
+    title: title,
+    link: link,
+    cat: cat,
+    desc: desc || "Không có mô tả.",
+    img: uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100),
+    views: 0
+  };
+
+  addons.unshift(newAddon);
+  saveStore();
+  closePostModal();
+  renderHome();
+  renderPopular();
+  showToast("Đăng bài thành công!");
+
+  document.getElementById('postTitle').value = "";
+  document.getElementById('postLink').value = "";
+  document.getElementById('postDesc').value = "";
+  uploadedImgBase64 = "";
+}
+
+function createCard(item) {
+  let card = document.createElement('div');
+  card.className = 'addon-card';
+  card.onclick = () => openDetail(item.id);
+
+  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon(${item.id}, event)" title="Xóa Addon">✕</button>` : '';
+
+  card.innerHTML = `
+    ${deleteBtnHtml}
+    <img class="addon-img" src="${item.img}" alt="${item.title}">
+    <div class="addon-info">
+      <div class="addon-name">${item.title}</div>
+      <div class="addon-meta">
+        <span>👁 ${item.views}</span>
+        <span>${item.cat}</span>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function renderHome() {
+  let container = document.getElementById('tabHome');
+  container.innerHTML = '';
+
+  if (addons.length === 0) {
+    container.innerHTML = '<div class="empty-state">Hiện tại chưa có addon nào. Hãy đăng nhập Admin để đăng bài mới!</div>';
+    return;
+  }
+
+  CATEGORIES.forEach(cat => {
+    let catItems = addons.filter(a => a.cat === cat);
+    if(catItems.length === 0) return;
+
+    let sec = document.createElement('div');
+    sec.className = 'category-section';
+
+    let title = document.createElement('div');
+    title.className = 'category-title';
+    title.innerText = cat;
+    sec.appendChild(title);
+
+    let sliderContainer = document.createElement('div');
+    sliderContainer.className = 'slider-container';
+
+    let slider = document.createElement('div');
+    slider.className = 'addon-slider';
+    slider.id = `slider-${cat.replace(/\s+/g, '')}`;
+
+    catItems.forEach(item => {
+      slider.appendChild(createCard(item));
+    });
+
+    sliderContainer.appendChild(slider);
+
+    let totalDots = Math.ceil(catItems.length / 7);
+    if (totalDots > 0) {
+      let dotsDiv = document.createElement('div');
+      dotsDiv.className = 'pagination-dots';
+      for (let i = 0; i < totalDots; i++) {
+        let dot = document.createElement('div');
+        dot.className = `dot ${i === 0 ? 'active' : ''}`;
+        dot.onclick = () => {
+          let cardWidth = slider.querySelector('.addon-card') ? slider.querySelector('.addon-card').offsetWidth + 14 : 174;
+          slider.scrollTo({ left: i * 7 * cardWidth, behavior: 'smooth' });
+          Array.from(dotsDiv.children).forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+        };
+        dotsDiv.appendChild(dot);
+      }
+      sliderContainer.appendChild(dotsDiv);
+    }
+
+    sec.appendChild(sliderContainer);
+    container.appendChild(sec);
+  });
+}
+
+function renderPopular() {
+  let container = document.getElementById('popularContent');
+  container.innerHTML = '';
+
+  if (addons.length === 0) {
+    container.innerHTML = '<div class="empty-state">Chưa có addon nào được đăng!</div>';
+    return;
+  }
+
+  let sorted = [...addons].sort((a, b) => b.views - a.views);
+
+  if (sorted.length > 0) {
+    let topSection = document.createElement('div');
+    topSection.style.marginBottom = '24px';
+    topSection.innerHTML = '<div class="category-title">★ SIÊU HOT NHIỀU VIEW NHẤT ★</div>';
+    let topGrid = document.createElement('div');
+    topGrid.className = 'popular-list';
+    sorted.slice(0, 3).forEach(item => topGrid.appendChild(createCard(item)));
+    topSection.appendChild(topGrid);
+    container.appendChild(topSection);
+  }
+
+  let restSection = document.createElement('div');
+  restSection.innerHTML = '<div class="category-title">Tất cả Addon Nổi Tiếng</div>';
+  let restGrid = document.createElement('div');
+  restGrid.className = 'popular-list';
+  sorted.forEach(item => restGrid.appendChild(createCard(item)));
+  restSection.appendChild(restGrid);
+
+  container.appendChild(restSection);
+}
+
+function renderDownloaded() {
+  let container = document.getElementById('downloadedContent');
+  container.innerHTML = '';
+
+  let list = addons.filter(a => downloadedIds.includes(a.id));
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state">Bạn chưa tải addon nào!</div>';
+    return;
+  }
+
+  list.forEach(item => container.appendChild(createCard(item)));
+}
+
+function openDetail(id) {
+  let item = addons.find(a => a.id === id);
+  if (!item) return;
+
+  selectedAddonId = id;
+  document.getElementById('detailTitle').innerText = item.title;
+  document.getElementById('detailImg').src = item.img;
+  document.getElementById('detailCat').innerText = 'Thể loại: ' + item.cat;
+  document.getElementById('detailDesc').innerText = item.desc;
+
+  let footer = document.getElementById('detailFooter');
+  if (isAdmin) {
+    footer.innerHTML = `
+      <button class="btn btn-danger" onclick="deleteAddon(${item.id})">Xóa Addon</button>
+      <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
+    `;
+  } else {
+    footer.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
+      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
+    `;
+  }
+
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('active');
+}
+
+function downloadCurrentAddon() {
+  let item = addons.find(a => a.id === selectedAddonId);
+  if (!item) return;
+
+  item.views += 1;
+  if (!downloadedIds.includes(item.id)) {
+    downloadedIds.push(item.id);
+  }
+  saveStore();
+  renderHome();
+  renderPopular();
+  renderDownloaded();
+
+  alert("Xin lỗi đã làm phiền bạn nhưng tôi mong bạn sẽ dành ra 3p để vượt 2 link giúp chúng tôi có tiền ăn mì tôm😭");
+  window.open(item.link, '_blank');
+  closeDetailModal();
+}
+
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById(tabId).classList.add('active');
+  el.classList.add('active');
+
+  if(tabId === 'tabDownloaded') renderDownloaded();
+}
+</script>
+</body>
+</html>
