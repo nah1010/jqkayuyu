@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kho Addon Minecraft</title>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
 <style>
 :root {
@@ -372,6 +372,10 @@ header {
   background-color: #0068ff;
 }
 
+.floating-btn.logout-btn {
+  background-color: var(--danger);
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -577,6 +581,9 @@ header {
   <button id="adminBtn" class="floating-btn" style="display:none;" onclick="openPostModal()" title="Đăng Addon mới">
     <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
   </button>
+  <button id="logoutBtn" class="floating-btn logout-btn" style="display:none;" onclick="logoutAdmin()" title="Đăng xuất">
+    <svg style="width:24px;height:24px;fill:white;" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+  </button>
   <button id="zaloBtn" class="floating-btn zalo-btn" onclick="openZaloModal()">
     <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5L2 22l5.1-1.32C8.5 21.52 10.2 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
   </button>
@@ -642,8 +649,8 @@ header {
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Tài khoản</label>
-        <input type="text" id="loginUser">
+        <label>Email Admin</label>
+        <input type="email" id="loginUser">
       </div>
       <div class="form-group">
         <label>Mật khẩu</label>
@@ -719,7 +726,6 @@ header {
 <div id="toast" class="toast"></div>
 
 <script>
-// Cấu hình Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyB0kRaH7CgE3RQ0-tAg541HgvMl2LE6kJw",
   authDomain: "myaddon-91a1d.firebaseapp.com",
@@ -730,28 +736,38 @@ const firebaseConfig = {
   measurementId: "G-JKEJ1CYCC1"
 };
 
-// Khởi tạo Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
-const U_ENC = "TWluaFF1YW4=";
-const P_ENC = "WHVhbnBoaTI3MDhA";
 
 const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Linh tinh🌚"];
 
 let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
-let loginAttempts = 0;
 let uploadedImgBase64 = "";
 let selectedAddonId = null;
 let isAdmin = false;
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    isAdmin = true;
+    document.getElementById('adminBtn').style.display = 'flex';
+    document.getElementById('logoutBtn').style.display = 'flex';
+    renderHome();
+    renderPopular();
+  } else {
+    isAdmin = false;
+    document.getElementById('adminBtn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'none';
+    renderHome();
+    renderPopular();
+  }
+});
 
 window.onload = function() {
   if(!localStorage.getItem('welcome_hidden')) {
     document.getElementById('welcomeModal').classList.add('active');
   }
   
-  // Tải dữ liệu Realtime từ Firestore Database
   db.collection("addons").onSnapshot((snapshot) => {
     addons = [];
     snapshot.forEach((doc) => {
@@ -761,7 +777,7 @@ window.onload = function() {
     renderPopular();
     renderDownloaded();
   }, (error) => {
-    console.error("Lỗi đọc Firebase Database:", error);
+    console.error(error);
   });
 };
 
@@ -847,29 +863,26 @@ function filterBySearch(q) {
 }
 
 function submitLogin() {
-  if (loginAttempts >= 3) {
-    document.getElementById('loginErr').innerText = "Thất bại quá 3 lần! Đã khóa đăng nhập.";
-    document.getElementById('loginErr').style.display = 'block';
-    return;
-  }
-
   let u = document.getElementById('loginUser').value;
   let p = document.getElementById('loginPass').value;
+  let err = document.getElementById('loginErr');
+  err.style.display = 'none';
 
-  if (btoa(u) === U_ENC && btoa(p) === P_ENC) {
-    isAdmin = true;
-    closeLoginModal();
-    document.getElementById('adminBtn').style.display = 'flex';
-    showToast("Đăng nhập Admin thành công!");
-    renderHome();
-    renderPopular();
-    renderDownloaded();
-  } else {
-    loginAttempts++;
-    let err = document.getElementById('loginErr');
-    err.innerText = `Sai tài khoản/mật khẩu! (${loginAttempts}/3 lần)`;
-    err.style.display = 'block';
-  }
+  firebase.auth().signInWithEmailAndPassword(u, p)
+    .then((userCredential) => {
+      closeLoginModal();
+      showToast("Đăng nhập Admin thành công!");
+    })
+    .catch((error) => {
+      err.innerText = "Sai tài khoản hoặc mật khẩu!";
+      err.style.display = 'block';
+    });
+}
+
+function logoutAdmin() {
+  firebase.auth().signOut().then(() => {
+    showToast("Đã đăng xuất tài khoản Admin!");
+  });
 }
 
 function deleteAddon(id, event) {
@@ -882,7 +895,7 @@ function deleteAddon(id, event) {
     closeDetailModal();
     showToast("Đã xóa addon thành công!");
   }).catch((error) => {
-    alert("Lỗi xóa bài: " + error.message);
+    alert(error.message);
   });
 }
 
@@ -935,7 +948,7 @@ function submitPost() {
     document.getElementById('postDesc').value = "";
     uploadedImgBase64 = "";
   }).catch((error) => {
-    alert("Lỗi khi đăng bài: " + error.message);
+    alert(error.message);
   });
 }
 
@@ -944,7 +957,7 @@ function createCard(item) {
   card.className = 'addon-card';
   card.onclick = () => openDetail(item.id);
 
-  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)" title="Xóa Addon">✕</button>` : '';
+  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)">✕</button>` : '';
 
   card.innerHTML = `
     ${deleteBtnHtml}
@@ -1097,7 +1110,6 @@ function downloadCurrentAddon() {
   let item = addons.find(a => a.id === selectedAddonId);
   if (!item) return;
 
-  // Tăng lượt xem lên Firebase
   db.collection("addons").doc(item.id).update({
     views: firebase.firestore.FieldValue.increment(1)
   });
