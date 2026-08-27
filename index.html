@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5,9 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kho Addon Minecraft</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<!-- Thư viện Cropper.js để chỉnh sửa & Zoom ảnh Admin -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
 <style>
 :root {
@@ -405,7 +411,7 @@ header {
   border: 1px solid var(--border);
   border-radius: 16px;
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -454,6 +460,10 @@ header {
   cursor: pointer;
   border: none;
   transition: opacity 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-primary {
@@ -509,6 +519,32 @@ header {
   min-height: 70px;
 }
 
+/* Khu vực chỉnh sửa ảnh Admin */
+.crop-editor-container {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.img-container {
+  width: 100%;
+  max-height: 300px;
+  margin-bottom: 10px;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.img-container img {
+  display: block;
+  max-width: 100%;
+}
+
 .toast {
   position: fixed;
   top: 20px;
@@ -519,7 +555,7 @@ header {
   padding: 10px 20px;
   border-radius: 20px;
   font-size: 14px;
-  z-index: 300;
+  z-index: 500;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   opacity: 0;
   pointer-events: none;
@@ -611,6 +647,7 @@ header {
   </button>
 </nav>
 
+<!-- Modals cơ bản -->
 <div id="welcomeModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
@@ -672,6 +709,7 @@ header {
   </div>
 </div>
 
+<!-- Modal Đăng / Sửa Addon (ADMIN) -->
 <div id="postModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
@@ -697,10 +735,29 @@ header {
           <option value="Linh tinh🌚">Linh tinh🌚</option>
         </select>
       </div>
+      
+      <!-- Khu vực Upload & Cắt Ảnh -->
       <div class="form-group">
-        <label>Ảnh Addon (tối đa 1MB - bỏ trống nếu giữ ảnh cũ)</label>
+        <label>Ảnh Addon (Chọn ảnh để mở công cụ Cắt & Phóng to)</label>
         <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
+        
+        <!-- Khung chỉnh sửa ảnh -->
+        <div id="cropEditor" class="crop-editor-container">
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Lăn chuột để Phóng to/Thu nhỏ (Zoom In/Out). Kéo thả để chọn vùng ảnh.</p>
+          <div class="img-container">
+            <img id="imageToCrop" src="">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="zoomCropper(0.1)">➕ Zoom</button>
+            <button type="button" class="btn btn-secondary" onclick="zoomCropper(-0.1)">➖ Zoom</button>
+            <button type="button" class="btn btn-primary" style="flex:1;" onclick="applyCrop()">✅ Cắt Ảnh</button>
+          </div>
+        </div>
+        
+        <!-- Hiển thị ảnh sau khi đã cắt hoặc ảnh cũ khi sửa -->
+        <img id="imgPreview" src="" style="display:none; width:100%; height:160px; object-fit:cover; margin-top:10px; border-radius:8px; border:1px solid var(--border);">
       </div>
+
       <div class="form-group">
         <label>Mô tả Addon</label>
         <textarea id="postDesc"></textarea>
@@ -711,7 +768,7 @@ header {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="width:100%;" id="submitPostBtn" onclick="submitPost()">Đăng</button>
+      <button class="btn btn-primary" style="width:100%;" id="submitPostBtn" onclick="submitPost()">Đăng Lên Kho</button>
     </div>
   </div>
 </div>
@@ -752,7 +809,11 @@ const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Li
 
 let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
+
+// Biến quản lý ảnh và Cropper
 let uploadedImgBase64 = "";
+let cropper = null;
+
 let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
@@ -826,6 +887,66 @@ function hideZaloBubble() {
   document.getElementById('zaloBtn').style.display = 'none';
 }
 
+// ----------------------------------------------------
+// CHỨC NĂNG CẮT & ZOOM ẢNH BẰNG CROPPER.JS DÀNH CHO ADMIN
+// ----------------------------------------------------
+function handleImgUpload(e) {
+  let file = e.target.files[0];
+  if (!file) return;
+
+  let reader = new FileReader();
+  reader.onload = function(evt) {
+    // Ẩn ảnh preview cũ, Mở bộ công cụ cắt ảnh
+    document.getElementById('imgPreview').style.display = 'none';
+    document.getElementById('cropEditor').style.display = 'block';
+    
+    let imgElement = document.getElementById('imageToCrop');
+    imgElement.src = evt.target.result;
+    
+    // Reset cropper cũ nếu có
+    if (cropper) { cropper.destroy(); }
+    
+    // Khởi tạo Cropper.js
+    cropper = new Cropper(imgElement, {
+      aspectRatio: 16 / 9, // Tỉ lệ khung hình cố định cho Addon
+      viewMode: 1,         // Giới hạn crop box không ra ngoài ảnh
+      autoCropArea: 1,     // Crop box bao trọn ảnh lúc đầu
+      zoomable: true,      // Cho phép Zoom
+      background: false
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function zoomCropper(ratio) {
+  if (cropper) cropper.zoom(ratio);
+}
+
+function applyCrop() {
+  if (!cropper) return;
+  
+  // Lấy dữ liệu ảnh sau khi cắt và nén nhẹ lại để không chiếm quá nhiều dung lượng Database
+  let canvas = cropper.getCroppedCanvas({
+    maxWidth: 800,
+    maxHeight: 600
+  });
+  
+  uploadedImgBase64 = canvas.toDataURL("image/jpeg", 0.85); // Nén nhẹ 85%
+  
+  // Dọn dẹp Cropper
+  cropper.destroy();
+  cropper = null;
+  document.getElementById('cropEditor').style.display = 'none';
+  
+  // Hiển thị Preview
+  let preview = document.getElementById('imgPreview');
+  preview.src = uploadedImgBase64;
+  preview.style.display = 'block';
+  
+  showToast("Cắt ảnh thành công!");
+}
+// ----------------------------------------------------
+
 function openPostModal() {
   editingId = null;
   document.getElementById('postTitle').value = "";
@@ -833,6 +954,11 @@ function openPostModal() {
   document.getElementById('postDesc').value = "";
   document.getElementById('postOrder').value = "0";
   document.getElementById('postImgFile').value = "";
+  
+  // Xóa ảnh cắt
+  if(cropper) { cropper.destroy(); cropper = null; }
+  document.getElementById('cropEditor').style.display = 'none';
+  document.getElementById('imgPreview').style.display = 'none';
   uploadedImgBase64 = "";
   
   document.getElementById('postModalTitle').innerText = "Đăng Addon Mới";
@@ -842,97 +968,7 @@ function openPostModal() {
 
 function closePostModal() {
   document.getElementById('postModal').classList.remove('active');
-}
-
-function openLoginModal() {
-  document.getElementById('loginModal').classList.add('active');
-}
-
-function closeLoginModal() {
-  document.getElementById('loginModal').classList.remove('active');
-  document.getElementById('searchInput').value = '';
-}
-
-function handleSearch(e) {
-  let val = e.target.value.trim();
-  if (e.key === 'Enter') {
-    if (val === 'SignUpAdmin') {
-      openLoginModal();
-      return;
-    }
-  }
-  filterBySearch(val);
-}
-
-function filterBySearch(q) {
-  if (!q) {
-    renderHome();
-    return;
-  }
-  let filtered = addons.filter(a => a.title.toLowerCase().includes(q.toLowerCase()));
-  let container = document.getElementById('tabHome');
-  container.innerHTML = '<div class="category-title">Kết quả tìm kiếm</div>';
-  if(filtered.length === 0) {
-    container.innerHTML += '<div class="empty-state">Không tìm thấy addon nào</div>';
-    return;
-  }
-  let grid = document.createElement('div');
-  grid.className = 'popular-list';
-  filtered.forEach(item => grid.appendChild(createCard(item)));
-  container.appendChild(grid);
-}
-
-function submitLogin() {
-  let u = document.getElementById('loginUser').value;
-  let p = document.getElementById('loginPass').value;
-  let err = document.getElementById('loginErr');
-  err.style.display = 'none';
-
-  firebase.auth().signInWithEmailAndPassword(u, p)
-    .then((userCredential) => {
-      closeLoginModal();
-      showToast("Đăng nhập Admin thành công!");
-    })
-    .catch((error) => {
-      err.innerText = "Sai tài khoản hoặc mật khẩu!";
-      err.style.display = 'block';
-    });
-}
-
-function logoutAdmin() {
-  firebase.auth().signOut().then(() => {
-    showToast("Đã đăng xuất tài khoản Admin!");
-  });
-}
-
-function deleteAddon(id, event) {
-  if (event) {
-    event.stopPropagation();
-  }
-  if (!confirm("Bạn có chắc chắn muốn xóa addon này khỏi Database không?")) return;
-
-  db.collection("addons").doc(id).delete().then(() => {
-    closeDetailModal();
-    showToast("Đã xóa addon thành công!");
-  }).catch((error) => {
-    alert(error.message);
-  });
-}
-
-function handleImgUpload(e) {
-  let file = e.target.files[0];
-  if (file) {
-    if (file.size > 1 * 1024 * 1024) {
-      alert("Ảnh upload lên Database tối đa 1MB!");
-      e.target.value = "";
-      return;
-    }
-    let reader = new FileReader();
-    reader.onload = function(evt) {
-      uploadedImgBase64 = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
+  if (cropper) { cropper.destroy(); cropper = null; }
 }
 
 function submitPost() {
@@ -949,6 +985,11 @@ function submitPost() {
   if (!link) {
     alert("Vui lòng nhập link đường dẫn addon!");
     return;
+  }
+
+  // Nếu Admin đang chọn vùng ảnh mà quên bấm "Cắt Ảnh", tự động cắt giúp họ luôn
+  if (cropper) {
+    applyCrop();
   }
 
   let addonData = {
@@ -983,13 +1024,89 @@ function submitPost() {
   }
 }
 
+function editCurrentAddon() {
+  closeDetailModal();
+  let item = addons.find(a => a.id === selectedAddonId);
+  if (!item) return;
+
+  editingId = item.id;
+  document.getElementById('postTitle').value = item.title;
+  document.getElementById('postLink').value = item.link;
+  document.getElementById('postCat').value = item.cat;
+  document.getElementById('postDesc').value = item.desc;
+  document.getElementById('postOrder').value = item.order || 0;
+  
+  document.getElementById('postImgFile').value = "";
+  if(cropper) { cropper.destroy(); cropper = null; }
+  document.getElementById('cropEditor').style.display = 'none';
+  
+  // Hiển thị ảnh cũ của addon đang sửa
+  uploadedImgBase64 = ""; // Chưa tải ảnh mới thì rỗng
+  let preview = document.getElementById('imgPreview');
+  preview.src = item.img;
+  preview.style.display = 'block';
+
+  document.getElementById('postModalTitle').innerText = "Chỉnh Sửa Addon";
+  document.getElementById('submitPostBtn').innerText = "Lưu Thay Đổi";
+  document.getElementById('postModal').classList.add('active');
+}
+
+// ----------------------------------------------------
+// CÁC CHỨC NĂNG KHÁC (TÌM KIẾM, ĐĂNG NHẬP, HIỂN THỊ...)
+// ----------------------------------------------------
+
+function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
+function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); document.getElementById('searchInput').value = ''; }
+
+function handleSearch(e) {
+  let val = e.target.value.trim();
+  if (e.key === 'Enter') {
+    if (val === 'SignUpAdmin') { openLoginModal(); return; }
+  }
+  filterBySearch(val);
+}
+
+function filterBySearch(q) {
+  if (!q) { renderHome(); return; }
+  let filtered = addons.filter(a => a.title.toLowerCase().includes(q.toLowerCase()));
+  let container = document.getElementById('tabHome');
+  container.innerHTML = '<div class="category-title">Kết quả tìm kiếm</div>';
+  if(filtered.length === 0) { container.innerHTML += '<div class="empty-state">Không tìm thấy addon nào</div>'; return; }
+  let grid = document.createElement('div');
+  grid.className = 'popular-list';
+  filtered.forEach(item => grid.appendChild(createCard(item)));
+  container.appendChild(grid);
+}
+
+function submitLogin() {
+  let u = document.getElementById('loginUser').value;
+  let p = document.getElementById('loginPass').value;
+  let err = document.getElementById('loginErr');
+  err.style.display = 'none';
+  firebase.auth().signInWithEmailAndPassword(u, p).then(() => {
+    closeLoginModal(); showToast("Đăng nhập Admin thành công!");
+  }).catch(() => {
+    err.innerText = "Sai tài khoản hoặc mật khẩu!"; err.style.display = 'block';
+  });
+}
+
+function logoutAdmin() {
+  firebase.auth().signOut().then(() => { showToast("Đã đăng xuất tài khoản Admin!"); });
+}
+
+function deleteAddon(id, event) {
+  if (event) event.stopPropagation();
+  if (!confirm("Bạn có chắc chắn muốn xóa addon này khỏi Database không?")) return;
+  db.collection("addons").doc(id).delete().then(() => {
+    closeDetailModal(); showToast("Đã xóa addon thành công!");
+  }).catch((error) => { alert(error.message); });
+}
+
 function createCard(item) {
   let card = document.createElement('div');
   card.className = 'addon-card';
   card.onclick = () => openDetail(item.id);
-
   let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)">✕</button>` : '';
-
   card.innerHTML = `
     ${deleteBtnHtml}
     <img class="addon-img" src="${item.img}" alt="${item.title}">
@@ -1007,44 +1124,30 @@ function createCard(item) {
 function renderHome() {
   let container = document.getElementById('tabHome');
   container.innerHTML = '';
-
-  if (addons.length === 0) {
-    container.innerHTML = '<div class="empty-state">Hiện tại chưa có addon nào. Hãy đăng nhập Admin để đăng bài mới!</div>';
-    return;
-  }
-
+  if (addons.length === 0) { container.innerHTML = '<div class="empty-state">Hiện tại chưa có addon nào. Hãy đăng nhập Admin để đăng bài mới!</div>'; return; }
   CATEGORIES.forEach(cat => {
     let catItems = addons.filter(a => a.cat === cat);
     if(catItems.length === 0) return;
-
     catItems.sort((a, b) => {
       let orderA = a.order || 0;
       let orderB = b.order || 0;
       if (orderA !== orderB) return orderB - orderA;
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
-
     let sec = document.createElement('div');
     sec.className = 'category-section';
-
     let title = document.createElement('div');
     title.className = 'category-title';
     title.innerText = cat;
     sec.appendChild(title);
-
     let sliderContainer = document.createElement('div');
     sliderContainer.className = 'slider-container';
-
     let slider = document.createElement('div');
     slider.className = 'addon-slider';
     slider.id = `slider-${cat.replace(/\s+/g, '')}`;
-
-    catItems.forEach(item => {
-      slider.appendChild(createCard(item));
-    });
-
+    catItems.forEach(item => { slider.appendChild(createCard(item)); });
     sliderContainer.appendChild(slider);
-
+    
     let totalDots = Math.ceil(catItems.length / 7);
     if (totalDots > 0) {
       let dotsDiv = document.createElement('div');
@@ -1062,7 +1165,6 @@ function renderHome() {
       }
       sliderContainer.appendChild(dotsDiv);
     }
-
     sec.appendChild(sliderContainer);
     container.appendChild(sec);
   });
@@ -1071,14 +1173,8 @@ function renderHome() {
 function renderPopular() {
   let container = document.getElementById('popularContent');
   container.innerHTML = '';
-
-  if (addons.length === 0) {
-    container.innerHTML = '<div class="empty-state">Chưa có addon nào được đăng!</div>';
-    return;
-  }
-
+  if (addons.length === 0) { container.innerHTML = '<div class="empty-state">Chưa có addon nào được đăng!</div>'; return; }
   let sorted = [...addons].sort((a, b) => (b.views || 0) - (a.views || 0));
-
   if (sorted.length > 0) {
     let topSection = document.createElement('div');
     topSection.style.marginBottom = '24px';
@@ -1089,34 +1185,26 @@ function renderPopular() {
     topSection.appendChild(topGrid);
     container.appendChild(topSection);
   }
-
   let restSection = document.createElement('div');
   restSection.innerHTML = '<div class="category-title">Tất cả Addon Nổi Tiếng</div>';
   let restGrid = document.createElement('div');
   restGrid.className = 'popular-list';
   sorted.forEach(item => restGrid.appendChild(createCard(item)));
   restSection.appendChild(restGrid);
-
   container.appendChild(restSection);
 }
 
 function renderDownloaded() {
   let container = document.getElementById('downloadedContent');
   container.innerHTML = '';
-
   let list = addons.filter(a => downloadedIds.includes(a.id));
-  if (list.length === 0) {
-    container.innerHTML = '<div class="empty-state">Bạn chưa tải addon nào!</div>';
-    return;
-  }
-
+  if (list.length === 0) { container.innerHTML = '<div class="empty-state">Bạn chưa tải addon nào!</div>'; return; }
   list.forEach(item => container.appendChild(createCard(item)));
 }
 
 function openDetail(id) {
   let item = addons.find(a => a.id === id);
   if (!item) return;
-
   selectedAddonId = id;
   document.getElementById('detailTitle').innerText = item.title;
   document.getElementById('detailImg').src = item.img;
@@ -1137,29 +1225,7 @@ function openDetail(id) {
       <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
     `;
   }
-
   document.getElementById('detailModal').classList.add('active');
-}
-
-function editCurrentAddon() {
-  closeDetailModal();
-  let item = addons.find(a => a.id === selectedAddonId);
-  if (!item) return;
-
-  editingId = item.id;
-  document.getElementById('postTitle').value = item.title;
-  document.getElementById('postLink').value = item.link;
-  document.getElementById('postCat').value = item.cat;
-  document.getElementById('postDesc').value = item.desc;
-  document.getElementById('postOrder').value = item.order || 0;
-  
-  document.getElementById('postImgFile').value = "";
-  uploadedImgBase64 = "";
-
-  document.getElementById('postModalTitle').innerText = "Chỉnh Sửa Addon";
-  document.getElementById('submitPostBtn').innerText = "Lưu Thay Đổi";
-  
-  document.getElementById('postModal').classList.add('active');
 }
 
 function closeDetailModal() {
@@ -1169,16 +1235,11 @@ function closeDetailModal() {
 function downloadCurrentAddon() {
   let item = addons.find(a => a.id === selectedAddonId);
   if (!item) return;
-
-  db.collection("addons").doc(item.id).update({
-    views: firebase.firestore.FieldValue.increment(1)
-  });
-
+  db.collection("addons").doc(item.id).update({ views: firebase.firestore.FieldValue.increment(1) });
   if (!downloadedIds.includes(item.id)) {
     downloadedIds.push(item.id);
     localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
   }
-
   alert("Xin lỗi đã làm phiền bạn nhưng tôi mong bạn sẽ dành ra 3p để vượt 2 link giúp chúng tôi có tiền ăn mì tôm😭");
   window.open(item.link, '_blank');
   closeDetailModal();
@@ -1187,10 +1248,8 @@ function downloadCurrentAddon() {
 function switchTab(tabId, el) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
   document.getElementById(tabId).classList.add('active');
   el.classList.add('active');
-
   if(tabId === 'tabDownloaded') renderDownloaded();
 }
 </script>
