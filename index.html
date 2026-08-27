@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kho Addon Minecraft</title>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root {
   --primary: #10b981;
@@ -679,7 +684,7 @@ header {
         </select>
       </div>
       <div class="form-group">
-        <label>Ảnh Addon (tối đa 2MB)</label>
+        <label>Ảnh Addon (tối đa 1MB)</label>
         <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
       </div>
       <div class="form-group">
@@ -714,32 +719,50 @@ header {
 <div id="toast" class="toast"></div>
 
 <script>
+// Cấu hình Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyB0kRaH7CgE3RQ0-tAg541HgvMl2LE6kJw",
+  authDomain: "myaddon-91a1d.firebaseapp.com",
+  projectId: "myaddon-91a1d",
+  storageBucket: "myaddon-91a1d.firebasestorage.app",
+  messagingSenderId: "731442396917",
+  appId: "1:731442396917:web:fa605b6a1f31495396cfbc",
+  measurementId: "G-JKEJ1CYCC1"
+};
+
+// Khởi tạo Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const U_ENC = "TWluaFF1YW4=";
 const P_ENC = "WHVhbnBoaTI3MDhA";
 
 const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Linh tinh🌚"];
 
-let initialAddons = [];
-
-let addons = JSON.parse(localStorage.getItem('mc_addons_data')) || initialAddons;
+let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
 let loginAttempts = 0;
 let uploadedImgBase64 = "";
 let selectedAddonId = null;
 let isAdmin = false;
 
-function saveStore() {
-  localStorage.setItem('mc_addons_data', JSON.stringify(addons));
-  localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
-}
-
 window.onload = function() {
   if(!localStorage.getItem('welcome_hidden')) {
     document.getElementById('welcomeModal').classList.add('active');
   }
-  renderHome();
-  renderPopular();
-  renderDownloaded();
+  
+  // Tải dữ liệu Realtime từ Firestore Database
+  db.collection("addons").onSnapshot((snapshot) => {
+    addons = [];
+    snapshot.forEach((doc) => {
+      addons.push({ id: doc.id, ...doc.data() });
+    });
+    renderHome();
+    renderPopular();
+    renderDownloaded();
+  }, (error) => {
+    console.error("Lỗi đọc Firebase Database:", error);
+  });
 };
 
 function showToast(msg) {
@@ -853,24 +876,21 @@ function deleteAddon(id, event) {
   if (event) {
     event.stopPropagation();
   }
-  if (!confirm("Bạn có chắc chắn muốn xóa addon này không?")) return;
+  if (!confirm("Bạn có chắc chắn muốn xóa addon này khỏi Database không?")) return;
 
-  addons = addons.filter(a => a.id !== id);
-  downloadedIds = downloadedIds.filter(dId => dId !== id);
-  saveStore();
-
-  closeDetailModal();
-  renderHome();
-  renderPopular();
-  renderDownloaded();
-  showToast("Đã xóa addon thành công!");
+  db.collection("addons").doc(id).delete().then(() => {
+    closeDetailModal();
+    showToast("Đã xóa addon thành công!");
+  }).catch((error) => {
+    alert("Lỗi xóa bài: " + error.message);
+  });
 }
 
 function handleImgUpload(e) {
   let file = e.target.files[0];
   if (file) {
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Ảnh không được vượt quá 2MB!");
+    if (file.size > 1 * 1024 * 1024) {
+      alert("Ảnh upload lên Database tối đa 1MB!");
       e.target.value = "";
       return;
     }
@@ -898,26 +918,25 @@ function submitPost() {
   }
 
   let newAddon = {
-    id: Date.now(),
     title: title,
     link: link,
     cat: cat,
     desc: desc || "Không có mô tả.",
     img: uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100),
-    views: 0
+    views: 0,
+    createdAt: Date.now()
   };
 
-  addons.unshift(newAddon);
-  saveStore();
-  closePostModal();
-  renderHome();
-  renderPopular();
-  showToast("Đăng bài thành công!");
-
-  document.getElementById('postTitle').value = "";
-  document.getElementById('postLink').value = "";
-  document.getElementById('postDesc').value = "";
-  uploadedImgBase64 = "";
+  db.collection("addons").add(newAddon).then(() => {
+    closePostModal();
+    showToast("Đăng bài thành công lên Server!");
+    document.getElementById('postTitle').value = "";
+    document.getElementById('postLink').value = "";
+    document.getElementById('postDesc').value = "";
+    uploadedImgBase64 = "";
+  }).catch((error) => {
+    alert("Lỗi khi đăng bài: " + error.message);
+  });
 }
 
 function createCard(item) {
@@ -925,7 +944,7 @@ function createCard(item) {
   card.className = 'addon-card';
   card.onclick = () => openDetail(item.id);
 
-  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon(${item.id}, event)" title="Xóa Addon">✕</button>` : '';
+  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)" title="Xóa Addon">✕</button>` : '';
 
   card.innerHTML = `
     ${deleteBtnHtml}
@@ -933,7 +952,7 @@ function createCard(item) {
     <div class="addon-info">
       <div class="addon-name">${item.title}</div>
       <div class="addon-meta">
-        <span>👁 ${item.views}</span>
+        <span>👁 ${item.views || 0}</span>
         <span>${item.cat}</span>
       </div>
     </div>
@@ -1007,7 +1026,7 @@ function renderPopular() {
     return;
   }
 
-  let sorted = [...addons].sort((a, b) => b.views - a.views);
+  let sorted = [...addons].sort((a, b) => (b.views || 0) - (a.views || 0));
 
   if (sorted.length > 0) {
     let topSection = document.createElement('div');
@@ -1056,7 +1075,7 @@ function openDetail(id) {
   let footer = document.getElementById('detailFooter');
   if (isAdmin) {
     footer.innerHTML = `
-      <button class="btn btn-danger" onclick="deleteAddon(${item.id})">Xóa Addon</button>
+      <button class="btn btn-danger" onclick="deleteAddon('${item.id}')">Xóa Addon</button>
       <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
       <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
     `;
@@ -1078,14 +1097,15 @@ function downloadCurrentAddon() {
   let item = addons.find(a => a.id === selectedAddonId);
   if (!item) return;
 
-  item.views += 1;
+  // Tăng lượt xem lên Firebase
+  db.collection("addons").doc(item.id).update({
+    views: firebase.firestore.FieldValue.increment(1)
+  });
+
   if (!downloadedIds.includes(item.id)) {
     downloadedIds.push(item.id);
+    localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
   }
-  saveStore();
-  renderHome();
-  renderPopular();
-  renderDownloaded();
 
   alert("Xin lỗi đã làm phiền bạn nhưng tôi mong bạn sẽ dành ra 3p để vượt 2 link giúp chúng tôi có tiền ăn mì tôm😭");
   window.open(item.link, '_blank');
