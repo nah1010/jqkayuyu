@@ -20,6 +20,7 @@
   --border: #cbd5e1;
   --rainbow: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
   --danger: #ef4444;
+  --warning: #f59e0b;
 }
 
 * {
@@ -442,6 +443,7 @@ header {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -466,6 +468,11 @@ header {
 
 .btn-danger {
   background: var(--danger);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning);
   color: white;
 }
 
@@ -668,7 +675,7 @@ header {
 <div id="postModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span>Đăng Addon Mới</span>
+      <span id="postModalTitle">Đăng Addon Mới</span>
       <button class="close-x" onclick="closePostModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -691,16 +698,20 @@ header {
         </select>
       </div>
       <div class="form-group">
-        <label>Ảnh Addon (tối đa 1MB)</label>
+        <label>Ảnh Addon (tối đa 1MB - bỏ trống nếu giữ ảnh cũ)</label>
         <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
       </div>
       <div class="form-group">
         <label>Mô tả Addon</label>
         <textarea id="postDesc"></textarea>
       </div>
+      <div class="form-group">
+        <label>Thứ tự sắp xếp (Số càng lớn xếp càng lên trước)</label>
+        <input type="number" id="postOrder" value="0">
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="width:100%;" onclick="submitPost()">Đăng</button>
+      <button class="btn btn-primary" style="width:100%;" id="submitPostBtn" onclick="submitPost()">Đăng</button>
     </div>
   </div>
 </div>
@@ -717,8 +728,6 @@ header {
       <p id="detailDesc" style="white-space:pre-wrap; color:var(--text-muted);"></p>
     </div>
     <div class="modal-footer" id="detailFooter">
-      <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
     </div>
   </div>
 </div>
@@ -745,6 +754,7 @@ let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
 let uploadedImgBase64 = "";
 let selectedAddonId = null;
+let editingId = null;
 let isAdmin = false;
 
 firebase.auth().onAuthStateChanged((user) => {
@@ -817,6 +827,16 @@ function hideZaloBubble() {
 }
 
 function openPostModal() {
+  editingId = null;
+  document.getElementById('postTitle').value = "";
+  document.getElementById('postLink').value = "";
+  document.getElementById('postDesc').value = "";
+  document.getElementById('postOrder').value = "0";
+  document.getElementById('postImgFile').value = "";
+  uploadedImgBase64 = "";
+  
+  document.getElementById('postModalTitle').innerText = "Đăng Addon Mới";
+  document.getElementById('submitPostBtn').innerText = "Đăng Lên Kho";
   document.getElementById('postModal').classList.add('active');
 }
 
@@ -920,6 +940,7 @@ function submitPost() {
   let link = document.getElementById('postLink').value.trim();
   let cat = document.getElementById('postCat').value;
   let desc = document.getElementById('postDesc').value.trim();
+  let order = parseInt(document.getElementById('postOrder').value) || 0;
 
   if (!title || title.length > 30) {
     alert("Tên addon bắt buộc nhập và không quá 30 chữ!");
@@ -930,26 +951,36 @@ function submitPost() {
     return;
   }
 
-  let newAddon = {
+  let addonData = {
     title: title,
     link: link,
     cat: cat,
     desc: desc || "Không có mô tả.",
-    img: uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100),
-    views: 0,
-    createdAt: Date.now()
+    order: order
   };
 
-  db.collection("addons").add(newAddon).then(() => {
-    closePostModal();
-    showToast("Đăng bài thành công lên Server!");
-    document.getElementById('postTitle').value = "";
-    document.getElementById('postLink').value = "";
-    document.getElementById('postDesc').value = "";
-    uploadedImgBase64 = "";
-  }).catch((error) => {
-    alert(error.message);
-  });
+  if (uploadedImgBase64) {
+    addonData.img = uploadedImgBase64;
+  }
+
+  if (editingId) {
+    db.collection("addons").doc(editingId).update(addonData).then(() => {
+      closePostModal();
+      showToast("Đã cập nhật Addon thành công!");
+    }).catch((error) => {
+      alert(error.message);
+    });
+  } else {
+    addonData.img = uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100);
+    addonData.views = 0;
+    addonData.createdAt = Date.now();
+    db.collection("addons").add(addonData).then(() => {
+      closePostModal();
+      showToast("Đăng bài thành công lên Server!");
+    }).catch((error) => {
+      alert(error.message);
+    });
+  }
 }
 
 function createCard(item) {
@@ -985,6 +1016,13 @@ function renderHome() {
   CATEGORIES.forEach(cat => {
     let catItems = addons.filter(a => a.cat === cat);
     if(catItems.length === 0) return;
+
+    catItems.sort((a, b) => {
+      let orderA = a.order || 0;
+      let orderB = b.order || 0;
+      if (orderA !== orderB) return orderB - orderA;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
 
     let sec = document.createElement('div');
     sec.className = 'category-section';
@@ -1088,7 +1126,8 @@ function openDetail(id) {
   let footer = document.getElementById('detailFooter');
   if (isAdmin) {
     footer.innerHTML = `
-      <button class="btn btn-danger" onclick="deleteAddon('${item.id}')">Xóa Addon</button>
+      <button class="btn btn-warning" onclick="editCurrentAddon()">Sửa</button>
+      <button class="btn btn-danger" onclick="deleteAddon('${item.id}')">Xóa</button>
       <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
       <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
     `;
@@ -1100,6 +1139,27 @@ function openDetail(id) {
   }
 
   document.getElementById('detailModal').classList.add('active');
+}
+
+function editCurrentAddon() {
+  closeDetailModal();
+  let item = addons.find(a => a.id === selectedAddonId);
+  if (!item) return;
+
+  editingId = item.id;
+  document.getElementById('postTitle').value = item.title;
+  document.getElementById('postLink').value = item.link;
+  document.getElementById('postCat').value = item.cat;
+  document.getElementById('postDesc').value = item.desc;
+  document.getElementById('postOrder').value = item.order || 0;
+  
+  document.getElementById('postImgFile').value = "";
+  uploadedImgBase64 = "";
+
+  document.getElementById('postModalTitle').innerText = "Chỉnh Sửa Addon";
+  document.getElementById('submitPostBtn').innerText = "Lưu Thay Đổi";
+  
+  document.getElementById('postModal').classList.add('active');
 }
 
 function closeDetailModal() {
