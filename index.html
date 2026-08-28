@@ -2,8 +2,13 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kho Addon Minecraft</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#10b981">
+<title>Kho Addon Minecraft | MC-ADDONS</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -12,63 +17,105 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script>
+  // Khởi tạo Dark Mode ngay từ đầu để tránh flash trắng
+  const savedTheme = localStorage.getItem('mc_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+
 <style>
+/* ===== BIẾN MÀU SẮC & THEME ===== */
 :root {
   --primary: #10b981;
   --primary-dark: #059669;
-  --bg-main: #f1f5f9;
+  --secondary: #f59e0b; /* Vàng cam cho badge HOT */
+  --bg-main: #f8fafc;
   --card-bg: #ffffff;
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --border: #cbd5e1;
-  --rainbow: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+  --border: #e2e8f0;
   --danger: #ef4444;
   --warning: #f59e0b;
+  --overlay: rgba(15, 23, 42, 0.6);
+  --rainbow: linear-gradient(90deg, #ff4b4b, #ff9000, #e6c800, #00d26a, #007aff, #8b00ff);
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-primary: 0 8px 16px -4px rgba(16, 185, 129, 0.3);
+  
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
+[data-theme="dark"] {
+  --bg-main: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --overlay: rgba(0, 0, 0, 0.75);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+/* ===== RESET & CƠ BẢN ===== */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
-  padding-bottom: 80px;
+  padding-bottom: 85px;
   min-height: 100vh;
+  transition: background-color var(--transition), color var(--transition);
 }
 
+/* ===== HEADER & TÌM KIẾM ===== */
 header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  background-color: rgba(var(--card-bg-rgb), 0.85); /* Cần fallback hoặc set trong JS, dùng bg-color dưới */
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+/* Đổi bg header trong suốt một chút */
+header { background-color: transparent; background: inherit; }
+header::before {
+  content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
+  background: var(--card-bg); opacity: 0.85; z-index: -1;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: bold;
+  font-weight: 800;
   font-size: 18px;
   color: var(--primary);
   white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
-
-.logo svg {
-  width: 32px;
-  height: 32px;
-  fill: var(--primary);
-}
+.logo:active { transform: scale(0.95); }
+.logo img { width: 32px; height: 32px; object-fit: contain; }
 
 .search-box {
   flex: 1;
@@ -77,530 +124,480 @@ header {
 
 .search-box input {
   width: 100%;
-  padding: 10px 16px 10px 38px;
-  border-radius: 20px;
+  padding: 10px 36px 10px 40px;
+  border-radius: 100px;
   border: 1px solid var(--border);
-  background: var(--card-bg);
+  background: var(--bg-main);
   color: var(--text-main);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all var(--transition);
 }
 
 .search-box input:focus {
   border-color: var(--primary);
+  background: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 
-.search-box svg {
+.search-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  fill: var(--text-muted);
+  color: var(--text-muted);
+  width: 18px; height: 18px;
 }
 
+.clear-search {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  width: 18px; height: 18px;
+  cursor: pointer;
+  display: none;
+}
+
+.theme-toggle {
+  background: none; border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background var(--transition), color var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.theme-toggle:hover { background: var(--bg-main); color: var(--primary); }
+
+/* ===== NỘI DUNG CHÍNH & TABS ===== */
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px;
 }
 
 .tab-pane {
   display: none;
+  animation: fadeIn 0.4s ease;
 }
+.tab-pane.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.tab-pane.active {
-  display: block;
-}
-
-.category-section {
-  margin-bottom: 28px;
-}
+.category-section { margin-bottom: 32px; position: relative; }
 
 .category-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 12px;
+  color: var(--text-main);
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
-  border-left: 4px solid var(--primary);
-  padding-left: 8px;
 }
+.category-title i { color: var(--primary); }
 
-.slider-container {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-}
+/* ===== SLIDER ===== */
+.slider-container { position: relative; width: 100%; }
 
 .addon-slider {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding-bottom: 10px;
+  padding: 4px 4px 16px 4px; /* Padding để shadow không bị cắt */
   scrollbar-width: none;
+  margin: -4px; /* Bù trừ padding */
 }
+.addon-slider::-webkit-scrollbar { display: none; }
 
-.addon-slider::-webkit-scrollbar {
-  display: none;
-}
-
-.addon-card {
-  min-width: 160px;
-  max-width: 160px;
-  background: var(--card-bg);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-@media (min-width: 768px) {
-  .addon-card {
-    min-width: 200px;
-    max-width: 200px;
-  }
-}
-
-.addon-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--primary);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.15);
-}
-
-.card-delete-btn {
+.slider-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
+  top: 50%;
+  transform: translateY(-70%);
+  width: 36px; height: 36px;
   border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  color: var(--text-main);
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: transform 0.2s, background-color 0.2s;
+  transition: all 0.2s;
+  opacity: 0; visibility: hidden;
+}
+@media (min-width: 768px) {
+  .slider-container:hover .slider-btn { opacity: 1; visibility: visible; }
+}
+.slider-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.slider-btn.prev { left: -10px; }
+.slider-btn.next { right: -10px; }
+
+/* ===== ADDON CARD ===== */
+.addon-card {
+  min-width: 150px; max-width: 150px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex; flex-direction: column;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
-.card-delete-btn:hover {
-  background: #dc2626;
-  transform: scale(1.1);
+@media (min-width: 500px) { .addon-card { min-width: 170px; max-width: 170px; } }
+@media (min-width: 768px) { .addon-card { min-width: 190px; max-width: 190px; } }
+
+.addon-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary);
+}
+
+.addon-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background-color: var(--border);
+  overflow: hidden;
 }
 
 .addon-img {
-  width: 100%;
-  height: 110px;
+  width: 100%; height: 100%;
   object-fit: cover;
-  background-color: var(--border);
+  transition: transform 0.4s ease;
+}
+.addon-card:hover .addon-img { transform: scale(1.08); }
+
+/* Gradient mờ đáy ảnh */
+.addon-img-wrapper::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+  pointer-events: none;
 }
 
+.addon-badges {
+  position: absolute; top: 8px; left: 8px;
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 2;
+}
+
+.badge {
+  font-size: 10px; font-weight: 800;
+  padding: 3px 8px; border-radius: 6px;
+  color: white; letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.badge-new { background: var(--primary); }
+.badge-hot { background: var(--secondary); background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+.card-delete-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(239, 68, 68, 0.9); color: white;
+  border: none; border-radius: 8px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+.card-delete-btn:hover { background: #dc2626; transform: scale(1.1); }
+
 .addon-info {
-  padding: 10px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  padding: 12px; flex: 1;
+  display: flex; flex-direction: column; justify-content: space-between;
 }
 
 .addon-name {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.3;
+  font-size: 14px; font-weight: 600;
+  margin-bottom: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.4;
+  color: var(--text-main);
 }
 
 .addon-meta {
-  font-size: 11px;
-  color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-size: 11px; color: var(--text-muted);
+  display: flex; justify-content: space-between; align-items: center;
 }
 
+.cat-pill {
+  background: var(--bg-main); padding: 2px 6px;
+  border-radius: 4px; border: 1px solid var(--border);
+  font-size: 10px; font-weight: 500;
+}
+
+/* Pagination Dots */
 .pagination-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
+  display: flex; justify-content: center; gap: 8px; margin-top: 12px;
 }
-
 .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--border);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); cursor: pointer;
+  transition: all 0.3s ease;
 }
-
 .dot.active {
   background: var(--primary);
-  transform: scale(1.2);
+  width: 20px; border-radius: 100px;
 }
 
-.rainbow-badge {
-  background: var(--rainbow);
-  background-size: 200% auto;
-  color: #fff;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  animation: rainbowGlow 3s linear infinite;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-@keyframes rainbowGlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
+/* ===== TAB NỔI TIẾNG ===== */
 .popular-banner {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(255, 255, 255, 0.9));
-  border: 1px solid var(--primary);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 20px; margin-bottom: 24px;
+  display: flex; flex-direction: column; align-items: flex-start;
 }
+
+.rainbow-text {
+  font-size: 18px; font-weight: 800; margin-bottom: 8px;
+  background: var(--rainbow); background-size: 200% auto;
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+  animation: rainbowGlow 4s linear infinite;
+  display: flex; align-items: center; gap: 8px;
+}
+@keyframes rainbowGlow { to { background-position: 200% center; } }
 
 .popular-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
+@media (min-width: 500px) { .popular-list { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); } }
 
-@media (min-width: 768px) {
-  .popular-list {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-}
-
+/* ===== ĐIỀU HƯỚNG DƯỚI ===== */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background-color: rgba(255, 255, 255, 0.98);
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 65px;
+  background-color: var(--card-bg);
   border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  display: flex; justify-content: space-around; align-items: center;
   z-index: 90;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-muted);
-  font-size: 11px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  width: 33.33%;
-  height: 100%;
-  justify-content: center;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text-muted); font-size: 11px; font-weight: 500;
+  cursor: pointer; background: none; border: none;
+  width: 33.33%; height: 100%; justify-content: center;
+  position: relative; transition: color 0.2s;
 }
 
-.nav-item.active {
-  color: var(--primary);
-  font-weight: 600;
+.nav-item i { transition: transform 0.2s, stroke 0.2s; }
+.nav-img-icon { width: 24px; height: 24px; filter: grayscale(1); transition: all 0.3s; }
+
+.nav-item.active { color: var(--primary); font-weight: 700; }
+.nav-item.active i { transform: translateY(-2px); stroke: var(--primary); }
+.nav-item.active .nav-img-icon { filter: grayscale(0) drop-shadow(0 2px 4px rgba(245,158,11,0.4)); transform: translateY(-2px) scale(1.1); }
+
+/* Chỉ báo trượt */
+.nav-indicator {
+  position: absolute; top: 0; left: 0; height: 3px; width: 33.33%;
+  background: var(--primary);
+  border-radius: 0 0 4px 4px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-item svg {
-  width: 22px;
-  height: 22px;
-  fill: currentColor;
-}
-
-.rainbow-star {
-  fill: url(#rainbow-grad) !important;
-}
-
+/* ===== FLOATING BUTTONS ===== */
 .floating-container {
-  position: fixed;
-  bottom: 75px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 95;
+  position: fixed; bottom: 85px; right: 16px;
+  display: flex; flex-direction: column; gap: 12px; z-index: 95;
 }
 
 .floating-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  border: none;
-  transition: transform 0.2s;
+  width: 48px; height: 48px; border-radius: 50%;
+  background-color: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  cursor: pointer; border: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
 }
+@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-.floating-btn:hover {
-  transform: scale(1.08);
-}
+.floating-btn:hover { transform: scale(1.08); box-shadow: var(--shadow-lg); }
+.floating-btn:active { transform: scale(0.95); }
+.floating-btn.zalo-btn { background-color: #0068ff; }
+.floating-btn.logout-btn { background-color: var(--danger); }
 
-.floating-btn.zalo-btn {
-  background-color: #0068ff;
-}
-
-.floating-btn.logout-btn {
-  background-color: var(--danger);
-}
-
+/* ===== MODAL & FORM ===== */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s;
-  padding: 16px;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease; padding: 16px;
 }
 
-.modal-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
 
 .modal-box {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 450px; max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
 
 .modal-header {
-  padding: 14px 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  font-size: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; font-size: 16px; color: var(--text-main);
 }
 
 .close-x {
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-muted);
-  background: none;
-  border: none;
+  cursor: pointer; color: var(--text-muted);
+  background: var(--bg-main); border: none;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
 }
+.close-x:hover { background: #fee2e2; color: var(--danger); }
 
 .modal-body {
-  padding: 16px;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: 20px; font-size: 14px; line-height: 1.6;
+  overflow-y: auto; color: var(--text-main);
 }
 
 .modal-footer {
-  padding: 12px 16px;
+  padding: 16px 20px;
   border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap;
+  background: var(--bg-main);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: opacity 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  padding: 10px 20px; border-radius: 8px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
 }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--border); color: var(--text-main); }
+.btn-secondary:hover { filter: brightness(0.95); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
 
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-secondary {
-  background: var(--border);
-  color: var(--text-main);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-warning {
-  background: var(--warning);
-  color: white;
-}
-
-.link-green {
-  color: var(--primary);
-  font-weight: bold;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
+.form-group { margin-bottom: 16px; }
 .form-group label {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 6px;
-  color: var(--text-muted);
+  display: block; font-size: 13px; font-weight: 600;
+  margin-bottom: 6px; color: var(--text-main);
 }
-
 .form-group input, .form-group textarea, .form-group select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-main);
-  color: var(--text-main);
-  outline: none;
+  width: 100%; padding: 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-main);
+  color: var(--text-main); font-size: 14px; outline: none;
+  transition: border-color 0.2s;
 }
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 70px;
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  border-color: var(--primary);
 }
+.form-group textarea { resize: vertical; min-height: 80px; }
 
+/* Trình cắt ảnh */
 .crop-editor-container {
-  display: none;
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  background: #fafafa;
+  display: none; margin-top: 12px; padding: 12px;
+  border: 2px dashed var(--border); border-radius: 8px;
+  background: var(--bg-main);
 }
-
 .img-container {
-  width: 100%;
-  max-height: 300px;
-  margin-bottom: 10px;
-  background-color: #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  width: 100%; max-height: 250px; margin-bottom: 12px;
+  background-color: #000; border-radius: 4px;
+  display: flex; justify-content: center; align-items: center; overflow: hidden;
 }
 
-.img-container img {
-  display: block;
-  max-width: 100%;
+/* Modal Chi Tiết */
+#detailImg {
+  width: 100%; height: 200px; object-fit: cover;
+  border-radius: var(--radius-md); margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
+/* ===== TIỆN ÍCH ===== */
 .toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--primary);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 14px;
-  z-index: 500;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
+  position: fixed; top: 20px; left: 50%; transform: translate(-50%, -20px);
+  background: var(--text-main); color: var(--bg-main);
+  padding: 12px 24px; border-radius: 100px;
+  font-size: 14px; font-weight: 500;
+  z-index: 500; box-shadow: var(--shadow-lg);
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: flex; align-items: center; gap: 8px;
 }
-
-.toast.show {
-  opacity: 1;
-}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 .empty-state {
-  text-align: center;
-  padding: 50px 20px;
-  color: var(--text-muted);
-  font-size: 14px;
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted); font-size: 15px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
 }
+.empty-state i { width: 48px; height: 48px; color: var(--border); margin-bottom: 8px; }
+
+/* Skeleton Loading */
+.skeleton-card {
+  min-width: 150px; max-width: 150px; height: 195px;
+  background: var(--card-bg); border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+@media (min-width: 500px) { .skeleton-card { min-width: 170px; max-width: 170px; height: 215px;} }
+@media (min-width: 768px) { .skeleton-card { min-width: 190px; max-width: 190px; height: 235px;} }
+
+.skeleton-img { height: 120px; background: var(--border); animation: pulse 1.5s infinite; }
+.skeleton-text { height: 14px; background: var(--border); margin: 12px; border-radius: 4px; animation: pulse 1.5s infinite; }
+.skeleton-text.short { width: 60%; margin-top: 0; }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
 </style>
 </head>
 <body>
 
-<svg style="width:0;height:0;position:absolute;">
-  <linearGradient id="rainbow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#ff0000" />
-    <stop offset="20%" stop-color="#ff7f00" />
-    <stop offset="40%" stop-color="#ffff00" />
-    <stop offset="60%" stop-color="#00ff00" />
-    <stop offset="80%" stop-color="#0000ff" />
-    <stop offset="100%" stop-color="#8b00ff" />
-  </linearGradient>
-</svg>
-
 <header>
-  <div class="logo">
-    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+  <div class="logo" onclick="switchTab('tabHome', document.querySelector('.nav-item'))">
+    <img src="1.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8681/8681023.png'">
     MC-ADDONS
   </div>
   <div class="search-box">
-    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    <input type="text" id="searchInput" placeholder="Tìm kiếm addon..." onkeyup="handleSearch(event)">
+    <i data-lucide="search" class="search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Tìm kiếm addon..." oninput="toggleClearBtn()" onkeyup="handleSearch(event)">
+    <i data-lucide="x" class="clear-search" id="clearSearchBtn" onclick="clearSearch()"></i>
   </div>
+  <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">
+    <i data-lucide="moon"></i>
+  </button>
 </header>
 
 <div class="main-content">
-  <div id="tabHome" class="tab-pane active"></div>
+  <div id="tabHome" class="tab-pane active">
+    <div class="popular-list" id="homeSkeleton">
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+    </div>
+  </div>
 
   <div id="tabPopular" class="tab-pane">
     <div class="popular-banner">
-      <div class="rainbow-badge" style="font-size: 16px; margin-bottom: 8px;">
-        ★ BANG HỘI POPULAR ★
+      <div class="rainbow-text">
+        <i data-lucide="flame" style="stroke: #ef4444; fill: #ef4444;"></i> SIÊU HOT NHIỀU VIEW NHẤT
       </div>
       <p style="font-size: 13px; color: var(--text-muted);">Sắp xếp theo số lượt xem và độ yêu thích của cộng đồng!</p>
     </div>
@@ -609,7 +606,7 @@ header {
 
   <div id="tabDownloaded" class="tab-pane">
     <div class="category-title">
-      <svg style="width:20px;height:20px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      <i data-lucide="download-cloud"></i>
       Addon Đã Tải Về
     </div>
     <div id="downloadedContent" class="popular-list"></div>
@@ -617,28 +614,29 @@ header {
 </div>
 
 <div class="floating-container">
-  <button id="adminBtn" class="floating-btn" style="display:none;" onclick="openPostModal()" title="Đăng Addon mới">
-    <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+  <button id="adminBtn" class="floating-btn" style="display:none; animation-delay: 0.1s;" onclick="openPostModal()" title="Đăng Addon mới">
+    <i data-lucide="plus"></i>
   </button>
-  <button id="logoutBtn" class="floating-btn logout-btn" style="display:none;" onclick="logoutAdmin()" title="Đăng xuất">
-    <svg style="width:24px;height:24px;fill:white;" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+  <button id="logoutBtn" class="floating-btn logout-btn" style="display:none; animation-delay: 0.2s;" onclick="logoutAdmin()" title="Đăng xuất">
+    <i data-lucide="log-out"></i>
   </button>
-  <button id="zaloBtn" class="floating-btn zalo-btn" onclick="openZaloModal()">
-    <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5L2 22l5.1-1.32C8.5 21.52 10.2 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+  <button id="zaloBtn" class="floating-btn zalo-btn" style="animation-delay: 0.3s;" onclick="openZaloModal()" title="Liên hệ">
+    <i data-lucide="message-circle"></i>
   </button>
 </div>
 
 <nav class="bottom-nav">
+  <div class="nav-indicator" id="navIndicator"></div>
   <button class="nav-item active" onclick="switchTab('tabHome', this)">
-    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <i data-lucide="home"></i>
     <span>Trang chủ</span>
   </button>
   <button class="nav-item" onclick="switchTab('tabPopular', this)">
-    <svg class="rainbow-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-    <span class="rainbow-badge">Nổi tiếng</span>
+    <img src="2.png" alt="HOT" class="nav-img-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/7659/7659779.png'">
+    <span>Nổi tiếng</span>
   </button>
   <button class="nav-item" onclick="switchTab('tabDownloaded', this)">
-    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    <i data-lucide="download"></i>
     <span>Đã tải</span>
   </button>
 </nav>
@@ -646,8 +644,8 @@ header {
 <div id="welcomeModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span>🎉 KHAI TRƯƠNG WEBSITE 🎉</span>
-      <button class="close-x" onclick="closeWelcomeModal()">✕</button>
+      <span style="display: flex; align-items: center; gap: 8px;"><i data-lucide="party-popper" style="color: var(--primary);"></i> KHAI TRƯƠNG WEBSITE</span>
+      <button class="close-x" onclick="closeWelcomeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
       <p>Chào mừng bạn đã đến với web của tôi! Web chúng tôi sẵn sàng phục vụ bạn mọi addon khi bạn cần.</p>
@@ -664,17 +662,27 @@ header {
 <div id="zaloModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span>Thông Tin Liên Hệ & Báo Lỗi</span>
-      <button class="close-x" onclick="closeZaloModal()">✕</button>
+      <span style="display: flex; align-items: center; gap: 8px;"><i data-lucide="info" style="color: var(--primary);"></i> Thông Tin Liên Hệ</span>
+      <button class="close-x" onclick="closeZaloModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
-      <p style="margin-bottom: 10px;"><strong>Liên hệ admin:</strong></p>
-      <p style="margin-bottom: 14px;">• TanCraft: <span style="color:var(--text-muted);">( chưa cập nhật )</span></p>
-      <p>Tham Gia Server Discord của mình để cùng trò chuyện chia sẻ addon nhé :D <a href="https://discord.gg/zqQ3hWTfsC" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Link Ở Đây</a></p>
-      <p>Tham Gia Nhóm Zalo của mình để cùng trò chuyện chia sẻ addon nhé :D <a href="https://zalo.me/g/pjjit6ojygdrwgywxxrt" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Link Ở Đây</a></p>
+      <div style="background: var(--bg-main); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <strong>Liên hệ admin:</strong><br>
+        • TanCraft: <span style="color:var(--text-muted);">( chưa cập nhật )</span>
+      </div>
+      <p style="margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+        <i data-lucide="message-square" style="color: #5865F2; width:20px;"></i>
+        Tham Gia Server Discord của mình để cùng trò chuyện chia sẻ addon nhé! <br>
+        <a href="https://discord.gg/zqQ3hWTfsC" target="_blank" style="color: #5865F2; text-decoration: none; font-weight: bold;">Tham gia Discord →</a>
+      </p>
+      <p style="display:flex; align-items:center; gap:8px;">
+        <i data-lucide="message-circle" style="color: #0068ff; width:20px;"></i>
+        Tham Gia Nhóm Zalo của mình để cùng trò chuyện chia sẻ addon nhé! <br>
+        <a href="https://zalo.me/g/pjjit6ojygdrwgywxxrt" target="_blank" style="color: #0068ff; text-decoration: none; font-weight: bold;">Tham gia Zalo →</a>
+      </p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="hideZaloBubble()">Ẩn</button>
+      <button class="btn btn-secondary" onclick="hideZaloBubble()">Ẩn nút liên hệ</button>
       <button class="btn btn-primary" onclick="closeZaloModal()">Đóng</button>
     </div>
   </div>
@@ -683,23 +691,25 @@ header {
 <div id="loginModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span>Đăng Nhập Quản Trị Viên</span>
-      <button class="close-x" onclick="closeLoginModal()">✕</button>
+      <span>Đăng Nhập Quản Trị</span>
+      <button class="close-x" onclick="closeLoginModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label>Email Admin</label>
-        <input type="email" id="loginUser">
+        <input type="email" id="loginUser" placeholder="admin@example.com">
       </div>
       <div class="form-group">
         <label>Mật khẩu</label>
-        <input type="password" id="loginPass">
+        <input type="password" id="loginPass" placeholder="••••••••">
       </div>
-      <p id="loginErr" style="color:#ef4444; font-size:12px; display:none;"></p>
+      <p id="loginErr" style="color:var(--danger); font-size:13px; font-weight:500; display:none; margin-top:8px;">
+        <i data-lucide="alert-circle" style="width:14px; height:14px; vertical-align:middle;"></i> Sai tài khoản hoặc mật khẩu!
+      </p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeLoginModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="submitLogin()">Đăng nhập</button>
+      <button class="btn btn-primary" onclick="submitLogin()"><i data-lucide="log-in" style="width:18px;"></i> Đăng nhập</button>
     </div>
   </div>
 </div>
@@ -708,12 +718,12 @@ header {
   <div class="modal-box">
     <div class="modal-header">
       <span id="postModalTitle">Đăng Addon Mới</span>
-      <button class="close-x" onclick="closePostModal()">✕</button>
+      <button class="close-x" onclick="closePostModal()"><i data-lucide="x"></i></button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="padding-bottom: 0;">
       <div class="form-group">
         <label>Tên Addon (tối đa 30 chữ) *</label>
-        <input type="text" id="postTitle" maxlength="30">
+        <input type="text" id="postTitle" maxlength="30" placeholder="Nhập tên addon...">
       </div>
       <div class="form-group">
         <label>Link Addon (Gồm link vượt & link gốc) *</label>
@@ -731,27 +741,27 @@ header {
       </div>
       
       <div class="form-group">
-        <label>Ảnh Addon (Chọn ảnh để mở công cụ Cắt & Phóng to)</label>
-        <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
+        <label>Ảnh Addon (Chọn ảnh để mở công cụ Cắt)</label>
+        <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)" style="padding: 8px;">
         
         <div id="cropEditor" class="crop-editor-container">
-          <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Lăn chuột để Phóng to/Thu nhỏ (Zoom In/Out). Kéo thả để chọn vùng ảnh.</p>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;"><i data-lucide="mouse" style="width:12px; display:inline-block;"></i> Lăn chuột để Phóng to/Thu nhỏ. Kéo thả để chọn vùng ảnh.</p>
           <div class="img-container">
             <img id="imageToCrop" src="">
           </div>
           <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn btn-secondary" onclick="zoomCropper(0.1)">➕ Zoom</button>
-            <button type="button" class="btn btn-secondary" onclick="zoomCropper(-0.1)">➖ Zoom</button>
-            <button type="button" class="btn btn-primary" style="flex:1;" onclick="applyCrop()">✅ Cắt Ảnh</button>
+            <button type="button" class="btn btn-secondary" onclick="zoomCropper(0.1)" title="Phóng to"><i data-lucide="zoom-in"></i></button>
+            <button type="button" class="btn btn-secondary" onclick="zoomCropper(-0.1)" title="Thu nhỏ"><i data-lucide="zoom-out"></i></button>
+            <button type="button" class="btn btn-primary" style="flex:1;" onclick="applyCrop()"><i data-lucide="crop"></i> Cắt Ảnh</button>
           </div>
         </div>
         
-        <img id="imgPreview" src="" style="display:none; width:100%; height:160px; object-fit:cover; margin-top:10px; border-radius:8px; border:1px solid var(--border);">
+        <img id="imgPreview" src="" style="display:none; width:100%; height:180px; object-fit:cover; margin-top:12px; border-radius:8px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
       </div>
 
       <div class="form-group">
         <label>Mô tả Addon</label>
-        <textarea id="postDesc"></textarea>
+        <textarea id="postDesc" placeholder="Viết vài dòng giới thiệu về addon này..."></textarea>
       </div>
       <div class="form-group">
         <label>Thứ tự sắp xếp (Số càng lớn xếp càng lên trước)</label>
@@ -759,7 +769,9 @@ header {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="width:100%;" id="submitPostBtn" onclick="submitPost()">Đăng Lên Kho</button>
+      <button class="btn btn-primary" style="width:100%; font-size:15px; padding:12px;" id="submitPostBtn" onclick="submitPost()">
+        <i data-lucide="upload-cloud"></i> Đăng Lên Kho
+      </button>
     </div>
   </div>
 </div>
@@ -767,22 +779,64 @@ header {
 <div id="detailModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span id="detailTitle">Tên Addon</span>
-      <button class="close-x" onclick="closeDetailModal()">✕</button>
+      <span id="detailTitle" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;">Tên Addon</span>
+      <button class="close-x" onclick="closeDetailModal()"><i data-lucide="x"></i></button>
     </div>
-    <div class="modal-body">
-      <img id="detailImg" src="" style="width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom:12px;">
-      <p id="detailCat" style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:6px;"></p>
-      <p id="detailDesc" style="white-space:pre-wrap; color:var(--text-muted);"></p>
+    <div class="modal-body" style="padding-top: 16px;">
+      <div style="position: relative;">
+        <img id="detailImg" src="" alt="Addon Cover">
+        <span id="detailCat" class="cat-pill" style="position: absolute; bottom: 24px; left: 8px; background: rgba(0,0,0,0.6); color: white; border:none; backdrop-filter:blur(4px); font-size:12px; padding:4px 10px; border-radius:100px;"></span>
+      </div>
+      <div style="background: var(--bg-main); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+        <h4 style="margin-bottom: 8px; color: var(--text-main); display:flex; align-items:center; gap:6px;"><i data-lucide="align-left" style="width:16px;"></i> Mô tả chi tiết</h4>
+        <p id="detailDesc" style="white-space:pre-wrap; color:var(--text-muted); font-size: 14px; line-height: 1.6;"></p>
+      </div>
     </div>
     <div class="modal-footer" id="detailFooter">
     </div>
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast"><i data-lucide="check-circle" style="color: #10b981;"></i> <span id="toastMsg"></span></div>
 
 <script>
+// Khởi tạo icon Lucide ngay
+lucide.createIcons();
+
+// Hàm Theme Toggle
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('mc_theme', next);
+  
+  // Đổi icon
+  const btn = document.getElementById('themeToggle');
+  btn.innerHTML = next === 'dark' ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+  lucide.createIcons({ root: btn });
+}
+// Set icon theme ban đầu
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.documentElement.getAttribute('data-theme') === 'dark') {
+    document.getElementById('themeToggle').innerHTML = '<i data-lucide="sun"></i>';
+    lucide.createIcons({ root: document.getElementById('themeToggle') });
+  }
+});
+
+// Hàm hiển thị nút xóa ô tìm kiếm
+function toggleClearBtn() {
+  const input = document.getElementById('searchInput');
+  const btn = document.getElementById('clearSearchBtn');
+  btn.style.display = input.value.length > 0 ? 'block' : 'none';
+}
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  toggleClearBtn();
+  filterBySearch('');
+}
+
+// Cấu hình Firebase gốc
 const firebaseConfig = {
   apiKey: "AIzaSyB0kRaH7CgE3RQ0-tAg541HgvMl2LE6kJw",
   authDomain: "myaddon-91a1d.firebaseapp.com",
@@ -796,32 +850,27 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Linh tinh🌚"];
+const CATEGORIES = [
+  { name: "Hỗ trợ sinh tồn", icon: "heart-pulse" },
+  { name: "Giải trí", icon: "gamepad-2" },
+  { name: "Shader", icon: "sparkles" },
+  { name: "Map", icon: "map" },
+  { name: "Linh tinh🌚", icon: "box" }
+];
 
 let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
-
 let uploadedImgBase64 = "";
 let cropper = null;
-
 let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
 
 firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    isAdmin = true;
-    document.getElementById('adminBtn').style.display = 'flex';
-    document.getElementById('logoutBtn').style.display = 'flex';
-    renderHome();
-    renderPopular();
-  } else {
-    isAdmin = false;
-    document.getElementById('adminBtn').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'none';
-    renderHome();
-    renderPopular();
-  }
+  isAdmin = !!user;
+  document.getElementById('adminBtn').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('logoutBtn').style.display = isAdmin ? 'flex' : 'none';
+  if(addons.length > 0) { renderHome(); renderPopular(); }
 });
 
 window.onload = function() {
@@ -834,6 +883,10 @@ window.onload = function() {
     snapshot.forEach((doc) => {
       addons.push({ id: doc.id, ...doc.data() });
     });
+    // Xóa skeleton
+    const skeleton = document.getElementById('homeSkeleton');
+    if(skeleton) skeleton.remove();
+    
     renderHome();
     renderPopular();
     renderDownloaded();
@@ -844,86 +897,49 @@ window.onload = function() {
 
 function showToast(msg) {
   let t = document.getElementById('toast');
-  t.innerText = msg;
+  document.getElementById('toastMsg').innerText = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function copyPhone(num) {
-  navigator.clipboard.writeText(num).then(() => {
-    showToast("Đã sao chép số điện thoại: " + num);
-  });
+  navigator.clipboard.writeText(num).then(() => showToast("Đã sao chép: " + num));
 }
 
-function closeWelcomeModal() {
-  document.getElementById('welcomeModal').classList.remove('active');
-}
-
-function hideWelcomeModal() {
-  localStorage.setItem('welcome_hidden', 'true');
-  closeWelcomeModal();
-}
-
-function openZaloModal() {
-  document.getElementById('zaloModal').classList.add('active');
-}
-
-function closeZaloModal() {
-  document.getElementById('zaloModal').classList.remove('active');
-}
-
-function hideZaloBubble() {
-  closeZaloModal();
-  document.getElementById('zaloBtn').style.display = 'none';
-}
+function closeWelcomeModal() { document.getElementById('welcomeModal').classList.remove('active'); }
+function hideWelcomeModal() { localStorage.setItem('welcome_hidden', 'true'); closeWelcomeModal(); }
+function openZaloModal() { document.getElementById('zaloModal').classList.add('active'); }
+function closeZaloModal() { document.getElementById('zaloModal').classList.remove('active'); }
+function hideZaloBubble() { closeZaloModal(); document.getElementById('zaloBtn').style.display = 'none'; }
 
 function handleImgUpload(e) {
   let file = e.target.files[0];
   if (!file) return;
-
   let reader = new FileReader();
   reader.onload = function(evt) {
     document.getElementById('imgPreview').style.display = 'none';
     document.getElementById('cropEditor').style.display = 'block';
-    
     let imgElement = document.getElementById('imageToCrop');
     imgElement.src = evt.target.result;
-    
-    if (cropper) { cropper.destroy(); }
-    
+    if (cropper) cropper.destroy();
     cropper = new Cropper(imgElement, {
-      aspectRatio: 16 / 9,
-      viewMode: 1,
-      autoCropArea: 1,
-      zoomable: true,
-      background: false
+      aspectRatio: 16 / 9, viewMode: 1, autoCropArea: 1, zoomable: true, background: false
     });
   };
   reader.readAsDataURL(file);
 }
 
-function zoomCropper(ratio) {
-  if (cropper) cropper.zoom(ratio);
-}
+function zoomCropper(ratio) { if (cropper) cropper.zoom(ratio); }
 
 function applyCrop() {
   if (!cropper) return;
-  
-  let canvas = cropper.getCroppedCanvas({
-    maxWidth: 800,
-    maxHeight: 600
-  });
-  
+  let canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 600 });
   uploadedImgBase64 = canvas.toDataURL("image/jpeg", 0.85);
-  
-  cropper.destroy();
-  cropper = null;
+  cropper.destroy(); cropper = null;
   document.getElementById('cropEditor').style.display = 'none';
-  
   let preview = document.getElementById('imgPreview');
   preview.src = uploadedImgBase64;
   preview.style.display = 'block';
-  
   showToast("Cắt ảnh thành công!");
 }
 
@@ -934,15 +950,15 @@ function openPostModal() {
   document.getElementById('postDesc').value = "";
   document.getElementById('postOrder').value = "0";
   document.getElementById('postImgFile').value = "";
-  
   if(cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('cropEditor').style.display = 'none';
   document.getElementById('imgPreview').style.display = 'none';
   uploadedImgBase64 = "";
-  
-  document.getElementById('postModalTitle').innerText = "Đăng Addon Mới";
-  document.getElementById('submitPostBtn').innerText = "Đăng Lên Kho";
+  document.getElementById('postModalTitle').innerHTML = '<i data-lucide="plus-square" style="color:var(--primary);"></i> Đăng Addon Mới';
+  document.getElementById('submitPostBtn').innerHTML = '<i data-lucide="upload-cloud"></i> Đăng Lên Kho';
   document.getElementById('postModal').classList.add('active');
+  lucide.createIcons({root: document.getElementById('postModalTitle').parentElement});
+  lucide.createIcons({root: document.getElementById('submitPostBtn')});
 }
 
 function closePostModal() {
@@ -956,80 +972,60 @@ function submitPost() {
   let cat = document.getElementById('postCat').value;
   let desc = document.getElementById('postDesc').value.trim();
   let order = parseInt(document.getElementById('postOrder').value) || 0;
+  let btn = document.getElementById('submitPostBtn');
 
-  if (!title || title.length > 30) {
-    alert("Tên addon bắt buộc nhập và không quá 30 chữ!");
-    return;
-  }
-  if (!link) {
-    alert("Vui lòng nhập link đường dẫn addon!");
-    return;
-  }
+  if (!title || title.length > 30) { showToast("Tên addon trống hoặc quá 30 chữ!"); return; }
+  if (!link) { showToast("Vui lòng nhập link addon!"); return; }
 
-  if (cropper) {
-    applyCrop();
-  }
+  btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Đang xử lý...';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+
+  if (cropper) applyCrop();
 
   let addonData = {
-    title: title,
-    link: link,
-    cat: cat,
-    desc: desc || "Không có mô tả.",
-    order: order
+    title: title, link: link, cat: cat, desc: desc || "Không có mô tả.", order: order
   };
-
-  if (uploadedImgBase64) {
-    addonData.img = uploadedImgBase64;
-  }
+  if (uploadedImgBase64) addonData.img = uploadedImgBase64;
 
   if (editingId) {
     db.collection("addons").doc(editingId).update(addonData).then(() => {
-      closePostModal();
-      showToast("Đã cập nhật Addon thành công!");
-    }).catch((error) => {
-      alert(error.message);
-    });
+      closePostModal(); showToast("Đã cập nhật Addon!");
+    }).catch(e => showToast(e.message)).finally(() => resetBtn(btn));
   } else {
     addonData.img = uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100);
-    addonData.views = 0;
-    addonData.createdAt = Date.now();
+    addonData.views = 0; addonData.createdAt = Date.now();
     db.collection("addons").add(addonData).then(() => {
-      closePostModal();
-      showToast("Đăng bài thành công lên Server!");
-    }).catch((error) => {
-      alert(error.message);
-    });
+      closePostModal(); showToast("Đăng bài thành công!");
+    }).catch(e => showToast(e.message)).finally(() => resetBtn(btn));
   }
 }
+function resetBtn(btn) { btn.disabled = false; btn.style.opacity = '1'; }
 
 function editCurrentAddon() {
   closeDetailModal();
   let item = addons.find(a => a.id === selectedAddonId);
   if (!item) return;
-
   editingId = item.id;
   document.getElementById('postTitle').value = item.title;
   document.getElementById('postLink').value = item.link;
   document.getElementById('postCat').value = item.cat;
   document.getElementById('postDesc').value = item.desc;
   document.getElementById('postOrder').value = item.order || 0;
-  
   document.getElementById('postImgFile').value = "";
   if(cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('cropEditor').style.display = 'none';
-  
   uploadedImgBase64 = "";
   let preview = document.getElementById('imgPreview');
-  preview.src = item.img;
-  preview.style.display = 'block';
-
-  document.getElementById('postModalTitle').innerText = "Chỉnh Sửa Addon";
-  document.getElementById('submitPostBtn').innerText = "Lưu Thay Đổi";
+  preview.src = item.img; preview.style.display = 'block';
+  document.getElementById('postModalTitle').innerHTML = '<i data-lucide="edit" style="color:var(--warning);"></i> Chỉnh Sửa Addon';
+  document.getElementById('submitPostBtn').innerHTML = '<i data-lucide="save"></i> Lưu Thay Đổi';
   document.getElementById('postModal').classList.add('active');
+  lucide.createIcons({root: document.getElementById('postModal')});
 }
 
-function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
-function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); document.getElementById('searchInput').value = ''; }
+function openLoginModal() { document.getElementById('loginModal').classList.add('active'); document.getElementById('loginErr').style.display='none'; }
+function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); document.getElementById('searchInput').value = ''; toggleClearBtn();}
 
 function handleSearch(e) {
   let val = e.target.value.trim();
@@ -1043,12 +1039,16 @@ function filterBySearch(q) {
   if (!q) { renderHome(); return; }
   let filtered = addons.filter(a => a.title.toLowerCase().includes(q.toLowerCase()));
   let container = document.getElementById('tabHome');
-  container.innerHTML = '<div class="category-title">Kết quả tìm kiếm</div>';
-  if(filtered.length === 0) { container.innerHTML += '<div class="empty-state">Không tìm thấy addon nào</div>'; return; }
+  container.innerHTML = '<div class="category-title"><i data-lucide="search"></i> Kết quả tìm kiếm</div>';
+  if(filtered.length === 0) { 
+    container.innerHTML += '<div class="empty-state"><i data-lucide="package-open"></i><span>Không tìm thấy addon nào phù hợp</span></div>'; 
+    lucide.createIcons({root: container}); return; 
+  }
   let grid = document.createElement('div');
   grid.className = 'popular-list';
   filtered.forEach(item => grid.appendChild(createCard(item)));
   container.appendChild(grid);
+  lucide.createIcons({root: container});
 }
 
 function submitLogin() {
@@ -1058,36 +1058,48 @@ function submitLogin() {
   err.style.display = 'none';
   firebase.auth().signInWithEmailAndPassword(u, p).then(() => {
     closeLoginModal(); showToast("Đăng nhập Admin thành công!");
-  }).catch(() => {
-    err.innerText = "Sai tài khoản hoặc mật khẩu!"; err.style.display = 'block';
-  });
+  }).catch(() => { err.style.display = 'block'; });
 }
 
-function logoutAdmin() {
-  firebase.auth().signOut().then(() => { showToast("Đã đăng xuất tài khoản Admin!"); });
-}
+function logoutAdmin() { firebase.auth().signOut().then(() => showToast("Đã đăng xuất!")); }
 
 function deleteAddon(id, event) {
   if (event) event.stopPropagation();
-  if (!confirm("Bạn có chắc chắn muốn xóa addon này khỏi Database không?")) return;
+  if (!confirm("Bạn có chắc chắn muốn xóa addon này vĩnh viễn?")) return;
   db.collection("addons").doc(id).delete().then(() => {
-    closeDetailModal(); showToast("Đã xóa addon thành công!");
-  }).catch((error) => { alert(error.message); });
+    closeDetailModal(); showToast("Đã xóa addon!");
+  }).catch(e => showToast(e.message));
 }
 
+// Logic tạo card động
 function createCard(item) {
   let card = document.createElement('div');
   card.className = 'addon-card';
   card.onclick = () => openDetail(item.id);
-  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)">✕</button>` : '';
+  
+  // Tính toán Badge MỚI (trong 3 ngày)
+  let badges = '';
+  let now = Date.now();
+  if (item.createdAt && (now - item.createdAt < 3 * 24 * 60 * 60 * 1000)) {
+    badges += `<span class="badge badge-new">MỚI</span>`;
+  }
+  if (item.views >= 50) { // Giả sử > 50 view là HOT
+    badges += `<span class="badge badge-hot">HOT</span>`;
+  }
+
+  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : '';
+  
   card.innerHTML = `
     ${deleteBtnHtml}
-    <img class="addon-img" src="${item.img}" alt="${item.title}">
+    <div class="addon-img-wrapper">
+      <img class="addon-img" src="${item.img}" alt="${item.title}" loading="lazy">
+      <div class="addon-badges">${badges}</div>
+    </div>
     <div class="addon-info">
       <div class="addon-name">${item.title}</div>
       <div class="addon-meta">
-        <span>👁 ${item.views || 0}</span>
-        <span>${item.cat}</span>
+        <span style="display:flex; align-items:center; gap:4px; font-weight:600;"><i data-lucide="eye" style="width:14px; height:14px;"></i> ${item.views || 0}</span>
+        <span class="cat-pill">${item.cat}</span>
       </div>
     </div>
   `;
@@ -1097,82 +1109,119 @@ function createCard(item) {
 function renderHome() {
   let container = document.getElementById('tabHome');
   container.innerHTML = '';
-  if (addons.length === 0) { container.innerHTML = '<div class="empty-state">Hiện tại chưa có addon nào. Hãy đăng nhập Admin để đăng bài mới!</div>'; return; }
-  CATEGORIES.forEach(cat => {
-    let catItems = addons.filter(a => a.cat === cat);
+  if (addons.length === 0) { 
+    container.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><span>Hiện tại chưa có addon nào.<br>Hãy đăng nhập Admin để thêm mới!</span></div>'; 
+    lucide.createIcons({root: container}); return; 
+  }
+  
+  CATEGORIES.forEach(catObj => {
+    let catItems = addons.filter(a => a.cat === catObj.name);
     if(catItems.length === 0) return;
+    
+    // Sort
     catItems.sort((a, b) => {
-      let orderA = a.order || 0;
-      let orderB = b.order || 0;
+      let orderA = a.order || 0, orderB = b.order || 0;
       if (orderA !== orderB) return orderB - orderA;
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
+    
     let sec = document.createElement('div');
     sec.className = 'category-section';
-    let title = document.createElement('div');
-    title.className = 'category-title';
-    title.innerText = cat;
-    sec.appendChild(title);
+    sec.innerHTML = `<div class="category-title"><i data-lucide="${catObj.icon}"></i> ${catObj.name}</div>`;
+    
     let sliderContainer = document.createElement('div');
     sliderContainer.className = 'slider-container';
+    
+    // Mũi tên Desktop
+    let prevBtn = document.createElement('button'); prevBtn.className = 'slider-btn prev'; prevBtn.innerHTML = '<i data-lucide="chevron-left"></i>';
+    let nextBtn = document.createElement('button'); nextBtn.className = 'slider-btn next'; nextBtn.innerHTML = '<i data-lucide="chevron-right"></i>';
+    
     let slider = document.createElement('div');
     slider.className = 'addon-slider';
-    slider.id = `slider-${cat.replace(/\s+/g, '')}`;
-    catItems.forEach(item => { slider.appendChild(createCard(item)); });
-    sliderContainer.appendChild(slider);
+    catItems.forEach(item => slider.appendChild(createCard(item)));
     
-    let totalDots = Math.ceil(catItems.length / 7);
-    if (totalDots > 0) {
+    sliderContainer.appendChild(prevBtn);
+    sliderContainer.appendChild(slider);
+    sliderContainer.appendChild(nextBtn);
+    
+    // Logic cuộn mũi tên
+    prevBtn.onclick = () => slider.scrollBy({ left: -200, behavior: 'smooth' });
+    nextBtn.onclick = () => slider.scrollBy({ left: 200, behavior: 'smooth' });
+
+    // Tính toán Dot động theo kích thước màn hình
+    let cardWidth = window.innerWidth >= 768 ? 190 : (window.innerWidth >= 500 ? 170 : 150);
+    let cardsPerView = Math.floor(sliderContainer.offsetWidth / (cardWidth + 16)) || 2;
+    let totalDots = Math.ceil(catItems.length / cardsPerView);
+    
+    if (totalDots > 1) {
       let dotsDiv = document.createElement('div');
       dotsDiv.className = 'pagination-dots';
       for (let i = 0; i < totalDots; i++) {
         let dot = document.createElement('div');
         dot.className = `dot ${i === 0 ? 'active' : ''}`;
         dot.onclick = () => {
-          let cardWidth = slider.querySelector('.addon-card') ? slider.querySelector('.addon-card').offsetWidth + 14 : 174;
-          slider.scrollTo({ left: i * 7 * cardWidth, behavior: 'smooth' });
+          let cw = slider.querySelector('.addon-card') ? slider.querySelector('.addon-card').offsetWidth + 16 : (cardWidth + 16);
+          slider.scrollTo({ left: i * cardsPerView * cw, behavior: 'smooth' });
           Array.from(dotsDiv.children).forEach(d => d.classList.remove('active'));
           dot.classList.add('active');
         };
         dotsDiv.appendChild(dot);
       }
+      // Cập nhật dot khi cuộn tay trên mobile
+      slider.addEventListener('scroll', () => {
+        let scrollPos = slider.scrollLeft;
+        let cw = slider.querySelector('.addon-card') ? slider.querySelector('.addon-card').offsetWidth + 16 : (cardWidth+16);
+        let activeIndex = Math.round(scrollPos / (cardsPerView * cw));
+        Array.from(dotsDiv.children).forEach((d, idx) => d.classList.toggle('active', idx === activeIndex));
+      });
       sliderContainer.appendChild(dotsDiv);
     }
+    
     sec.appendChild(sliderContainer);
     container.appendChild(sec);
   });
+  lucide.createIcons({root: container});
 }
 
 function renderPopular() {
   let container = document.getElementById('popularContent');
   container.innerHTML = '';
-  if (addons.length === 0) { container.innerHTML = '<div class="empty-state">Chưa có addon nào được đăng!</div>'; return; }
+  if (addons.length === 0) { 
+    container.innerHTML = '<div class="empty-state"><i data-lucide="bar-chart-2"></i><span>Chưa có dữ liệu lượt xem!</span></div>'; 
+    lucide.createIcons({root: container}); return; 
+  }
   let sorted = [...addons].sort((a, b) => (b.views || 0) - (a.views || 0));
+  
   if (sorted.length > 0) {
-    let topSection = document.createElement('div');
-    topSection.style.marginBottom = '24px';
-    topSection.innerHTML = '<div class="category-title">★ SIÊU HOT NHIỀU VIEW NHẤT ★</div>';
     let topGrid = document.createElement('div');
     topGrid.className = 'popular-list';
-    sorted.slice(0, 3).forEach(item => topGrid.appendChild(createCard(item)));
-    topSection.appendChild(topGrid);
-    container.appendChild(topSection);
+    sorted.slice(0, 4).forEach(item => topGrid.appendChild(createCard(item)));
+    container.appendChild(topGrid);
   }
-  let restSection = document.createElement('div');
-  restSection.innerHTML = '<div class="category-title">Tất cả Addon Nổi Tiếng</div>';
-  let restGrid = document.createElement('div');
-  restGrid.className = 'popular-list';
-  sorted.forEach(item => restGrid.appendChild(createCard(item)));
-  restSection.appendChild(restGrid);
-  container.appendChild(restSection);
+  
+  if (sorted.length > 4) {
+    let restSection = document.createElement('div');
+    restSection.style.marginTop = '32px';
+    restSection.innerHTML = '<div class="category-title"><i data-lucide="list"></i> Tất cả Addon</div>';
+    let restGrid = document.createElement('div');
+    restGrid.className = 'popular-list';
+    sorted.slice(4).forEach(item => restGrid.appendChild(createCard(item)));
+    restSection.appendChild(restGrid);
+    container.appendChild(restSection);
+  }
+  lucide.createIcons({root: container});
 }
 
 function renderDownloaded() {
   let container = document.getElementById('downloadedContent');
   container.innerHTML = '';
   let list = addons.filter(a => downloadedIds.includes(a.id));
-  if (list.length === 0) { container.innerHTML = '<div class="empty-state">Bạn chưa tải addon nào!</div>'; return; }
+  if (list.length === 0) { 
+    container.innerHTML = '<div class="empty-state"><i data-lucide="folder-open"></i><span>Bạn chưa tải addon nào trên thiết bị này!</span></div>'; 
+    lucide.createIcons({root: document.getElementById('tabDownloaded')}); return; 
+  }
   list.forEach(item => container.appendChild(createCard(item)));
+  lucide.createIcons({root: document.getElementById('tabDownloaded')});
 }
 
 function openDetail(id) {
@@ -1181,29 +1230,29 @@ function openDetail(id) {
   selectedAddonId = id;
   document.getElementById('detailTitle').innerText = item.title;
   document.getElementById('detailImg').src = item.img;
-  document.getElementById('detailCat').innerText = 'Thể loại: ' + item.cat;
-  document.getElementById('detailDesc').innerText = item.desc;
+  document.getElementById('detailCat').innerText = item.cat;
+  document.getElementById('detailDesc').innerText = item.desc || "Chưa có mô tả chi tiết.";
 
   let footer = document.getElementById('detailFooter');
   if (isAdmin) {
     footer.innerHTML = `
-      <button class="btn btn-warning" onclick="editCurrentAddon()">Sửa</button>
-      <button class="btn btn-danger" onclick="deleteAddon('${item.id}')">Xóa</button>
+      <button class="btn btn-warning" onclick="editCurrentAddon()"><i data-lucide="edit-2" style="width:16px;"></i> Sửa</button>
+      <button class="btn btn-danger" onclick="deleteAddon('${item.id}')"><i data-lucide="trash-2" style="width:16px;"></i> Xóa</button>
+      <div style="flex:1"></div>
       <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
+      <button class="btn btn-primary" onclick="downloadCurrentAddon()"><i data-lucide="download"></i> Tải Ngay</button>
     `;
   } else {
     footer.innerHTML = `
       <button class="btn btn-secondary" onclick="closeDetailModal()">Đóng</button>
-      <button class="btn btn-primary" onclick="downloadCurrentAddon()">Tải Addon</button>
+      <button class="btn btn-primary" onclick="downloadCurrentAddon()"><i data-lucide="download"></i> Tải Ngay</button>
     `;
   }
   document.getElementById('detailModal').classList.add('active');
+  lucide.createIcons({root: footer});
 }
 
-function closeDetailModal() {
-  document.getElementById('detailModal').classList.remove('active');
-}
+function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
 
 function downloadCurrentAddon() {
   let item = addons.find(a => a.id === selectedAddonId);
@@ -1213,8 +1262,8 @@ function downloadCurrentAddon() {
     downloadedIds.push(item.id);
     localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
   }
-  alert("Mọi người chỉ việc vượt link4sub mất 10 giây là có thể lấy addon/pack rồi nhé❤️");
-  window.open(item.link, '_blank');
+  showToast("Đang chuyển hướng tải xuống...");
+  setTimeout(() => window.open(item.link, '_blank'), 500);
   closeDetailModal();
 }
 
@@ -1223,7 +1272,13 @@ function switchTab(tabId, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   el.classList.add('active');
+  
+  // Di chuyển indicator
+  let index = Array.from(el.parentNode.children).filter(c => c.classList.contains('nav-item')).indexOf(el);
+  document.getElementById('navIndicator').style.transform = `translateX(${index * 100}%)`;
+  
   if(tabId === 'tabDownloaded') renderDownloaded();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>
