@@ -454,25 +454,7 @@ header {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  position: relative;
-  z-index: 1;
 }
-
-.btn::before, .btn::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='%2355FF55'/%3E%3Crect x='1' y='2' width='2' height='2' fill='%23000'/%3E%3Crect x='5' y='2' width='2' height='2' fill='%23000'/%3E%3Crect x='3' y='4' width='2' height='3' fill='%23000'/%3E%3Crect x='2' y='5' width='1' height='2' fill='%23000'/%3E%3Crect x='5' y='5' width='1' height='2' fill='%23000'/%3E%3C/svg%3E");
-  background-size: cover;
-  image-rendering: pixelated;
-  z-index: -1;
-}
-
-.btn::before { left: -10px; }
-.btn::after { right: -10px; }
 
 .btn-primary {
   background: var(--primary);
@@ -616,12 +598,7 @@ header {
     <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
   </button>
   <button id="logoutBtn" class="floating-btn logout-btn" style="display:none;" onclick="logoutAdmin()" title="Đăng xuất">
-    <svg style="width:24px;height:24px;fill:white;" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-  </button>
-  <button id="zaloBtn" class="floating-btn zalo-btn" onclick="openZaloModal()">
-    <svg style="width:28px;height:28px;fill:white;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.35 5L2 22l5.1-1.32C8.5 21.52 10.2 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-  </button>
-</div>
+    <svg style="width:24px;height:24px;fill:white;" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1Đã xong! Bùm 💥 (Creeper đã nổ bay màu). 
 
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="switchTab('tabHome', this)">
