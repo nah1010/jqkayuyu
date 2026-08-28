@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -6,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kho Addon Minecraft</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-<!-- Thư viện Cropper.js để chỉnh sửa & Zoom ảnh Admin -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
@@ -519,7 +516,6 @@ header {
   min-height: 70px;
 }
 
-/* Khu vực chỉnh sửa ảnh Admin */
 .crop-editor-container {
   display: none;
   margin-top: 10px;
@@ -647,7 +643,6 @@ header {
   </button>
 </nav>
 
-<!-- Modals cơ bản -->
 <div id="welcomeModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
@@ -673,10 +668,10 @@ header {
       <button class="close-x" onclick="closeZaloModal()">✕</button>
     </div>
     <div class="modal-body">
-      <p style="margin-bottom: 10px;"><strong>Liên hệ 2 admin:</strong></p>
-      <p style="margin-bottom: 6px;">• XuanPhi: <span class="link-green" onclick="copyPhone('0368622960')">Ở đây</span></p>
+      <p style="margin-bottom: 10px;"><strong>Liên hệ admin:</strong></p>
       <p style="margin-bottom: 14px;">• TanCraft: <span style="color:var(--text-muted);">( chưa cập nhật )</span></p>
-      <p>Vào nhóm để có thể trò chuyện, chia sẻ addon :D <a href="https://zalo.me/g/pjjit6ojygdrwgywxxrt" target="_blank" class="link-green">Link ở đây</a></p>
+      <p>Tham Gia Server Discord của mình để cùng trò chuyện chia sẻ addon nhé :D <a href="https://discord.gg/zqQ3hWTfsC" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Link Ở Đây</a></p>
+      <p>Tham Gia Nhóm Zalo của mình để cùng trò chuyện chia sẻ addon nhé :D <a href="https://zalo.me/g/pjjit6ojygdrwgywxxrt" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Link Ở Đây</a></p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="hideZaloBubble()">Ẩn</button>
@@ -709,7 +704,6 @@ header {
   </div>
 </div>
 
-<!-- Modal Đăng / Sửa Addon (ADMIN) -->
 <div id="postModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
@@ -736,12 +730,10 @@ header {
         </select>
       </div>
       
-      <!-- Khu vực Upload & Cắt Ảnh -->
       <div class="form-group">
         <label>Ảnh Addon (Chọn ảnh để mở công cụ Cắt & Phóng to)</label>
         <input type="file" id="postImgFile" accept="image/*" onchange="handleImgUpload(event)">
         
-        <!-- Khung chỉnh sửa ảnh -->
         <div id="cropEditor" class="crop-editor-container">
           <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Lăn chuột để Phóng to/Thu nhỏ (Zoom In/Out). Kéo thả để chọn vùng ảnh.</p>
           <div class="img-container">
@@ -754,7 +746,6 @@ header {
           </div>
         </div>
         
-        <!-- Hiển thị ảnh sau khi đã cắt hoặc ảnh cũ khi sửa -->
         <img id="imgPreview" src="" style="display:none; width:100%; height:160px; object-fit:cover; margin-top:10px; border-radius:8px; border:1px solid var(--border);">
       </div>
 
@@ -810,7 +801,6 @@ const CATEGORIES = ["Hỗ trợ sinh tồn", "Giải trí", "Shader", "Map", "Li
 let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
 
-// Biến quản lý ảnh và Cropper
 let uploadedImgBase64 = "";
 let cropper = null;
 
@@ -887,31 +877,25 @@ function hideZaloBubble() {
   document.getElementById('zaloBtn').style.display = 'none';
 }
 
-// ----------------------------------------------------
-// CHỨC NĂNG CẮT & ZOOM ẢNH BẰNG CROPPER.JS DÀNH CHO ADMIN
-// ----------------------------------------------------
 function handleImgUpload(e) {
   let file = e.target.files[0];
   if (!file) return;
 
   let reader = new FileReader();
   reader.onload = function(evt) {
-    // Ẩn ảnh preview cũ, Mở bộ công cụ cắt ảnh
     document.getElementById('imgPreview').style.display = 'none';
     document.getElementById('cropEditor').style.display = 'block';
     
     let imgElement = document.getElementById('imageToCrop');
     imgElement.src = evt.target.result;
     
-    // Reset cropper cũ nếu có
     if (cropper) { cropper.destroy(); }
     
-    // Khởi tạo Cropper.js
     cropper = new Cropper(imgElement, {
-      aspectRatio: 16 / 9, // Tỉ lệ khung hình cố định cho Addon
-      viewMode: 1,         // Giới hạn crop box không ra ngoài ảnh
-      autoCropArea: 1,     // Crop box bao trọn ảnh lúc đầu
-      zoomable: true,      // Cho phép Zoom
+      aspectRatio: 16 / 9,
+      viewMode: 1,
+      autoCropArea: 1,
+      zoomable: true,
       background: false
     });
   };
@@ -925,27 +909,23 @@ function zoomCropper(ratio) {
 function applyCrop() {
   if (!cropper) return;
   
-  // Lấy dữ liệu ảnh sau khi cắt và nén nhẹ lại để không chiếm quá nhiều dung lượng Database
   let canvas = cropper.getCroppedCanvas({
     maxWidth: 800,
     maxHeight: 600
   });
   
-  uploadedImgBase64 = canvas.toDataURL("image/jpeg", 0.85); // Nén nhẹ 85%
+  uploadedImgBase64 = canvas.toDataURL("image/jpeg", 0.85);
   
-  // Dọn dẹp Cropper
   cropper.destroy();
   cropper = null;
   document.getElementById('cropEditor').style.display = 'none';
   
-  // Hiển thị Preview
   let preview = document.getElementById('imgPreview');
   preview.src = uploadedImgBase64;
   preview.style.display = 'block';
   
   showToast("Cắt ảnh thành công!");
 }
-// ----------------------------------------------------
 
 function openPostModal() {
   editingId = null;
@@ -955,7 +935,6 @@ function openPostModal() {
   document.getElementById('postOrder').value = "0";
   document.getElementById('postImgFile').value = "";
   
-  // Xóa ảnh cắt
   if(cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('cropEditor').style.display = 'none';
   document.getElementById('imgPreview').style.display = 'none';
@@ -987,7 +966,6 @@ function submitPost() {
     return;
   }
 
-  // Nếu Admin đang chọn vùng ảnh mà quên bấm "Cắt Ảnh", tự động cắt giúp họ luôn
   if (cropper) {
     applyCrop();
   }
@@ -1040,8 +1018,7 @@ function editCurrentAddon() {
   if(cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('cropEditor').style.display = 'none';
   
-  // Hiển thị ảnh cũ của addon đang sửa
-  uploadedImgBase64 = ""; // Chưa tải ảnh mới thì rỗng
+  uploadedImgBase64 = "";
   let preview = document.getElementById('imgPreview');
   preview.src = item.img;
   preview.style.display = 'block';
@@ -1050,10 +1027,6 @@ function editCurrentAddon() {
   document.getElementById('submitPostBtn').innerText = "Lưu Thay Đổi";
   document.getElementById('postModal').classList.add('active');
 }
-
-// ----------------------------------------------------
-// CÁC CHỨC NĂNG KHÁC (TÌM KIẾM, ĐĂNG NHẬP, HIỂN THỊ...)
-// ----------------------------------------------------
 
 function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
 function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); document.getElementById('searchInput').value = ''; }
@@ -1240,7 +1213,7 @@ function downloadCurrentAddon() {
     downloadedIds.push(item.id);
     localStorage.setItem('mc_downloaded_ids', JSON.stringify(downloadedIds));
   }
-  alert("Xin lỗi đã làm phiền bạn nhưng tôi mong bạn sẽ dành ra 3p để vượt 1 link giúp chúng tôi có tiền ăn mì tôm😭");
+  alert("Mọi người chỉ việc vượt link4sub mất 10 giây là có thể lấy addon/pack rồi nhé❤️");
   window.open(item.link, '_blank');
   closeDetailModal();
 }
