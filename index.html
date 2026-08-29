@@ -720,6 +720,19 @@ header::before {
   </button>
 </header>
 
+<div id="adContainer" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 16px; background:var(--card-bg); border-bottom:1px solid var(--border);">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '38d9af66432b0fcaad005cac2062eab1',
+      'format' : 'iframe',
+      'height' : 50,
+      'width' : 320,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://www.highrevenueformat.com/38d9af66432b0fcaad005cac2062eab1/invoke.js"></script>
+</div>
+
 <div class="main-content">
   <div id="tabHome" class="tab-pane active">
     <div class="popular-list" id="homeSkeleton">
@@ -1144,10 +1157,23 @@ let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
 
+let popunderAdLoaded = false;
+
 firebase.auth().onAuthStateChanged((user) => {
   isAdmin = !!user;
   document.getElementById('adminBtn').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('logoutBtn').style.display = isAdmin ? 'flex' : 'none';
+
+  const adContainer = document.getElementById('adContainer');
+  if (adContainer) adContainer.style.display = isAdmin ? 'none' : 'flex';
+
+  if (!isAdmin && !popunderAdLoaded) {
+    const popunderScript = document.createElement('script');
+    popunderScript.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
+    document.body.appendChild(popunderScript);
+    popunderAdLoaded = true;
+  }
+
   if(addons.length > 0) { renderHome(); renderPopular(); }
 });
 
