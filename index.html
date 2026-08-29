@@ -861,11 +861,13 @@ header::before {
 <div id="welcomeModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span style="display: flex; align-items: center; gap: 8px;"><i data-lucide="party-popper" style="color: var(--primary);"></i> KHAI TRƯƠNG WEBSITE</span>
+      <span style="display: flex; align-items: center; gap: 8px;"><i data-lucide="heart-handshake" style="color: var(--primary);"></i> LỜI NHẮN TỪ ADMIN</span>
       <button class="close-x" onclick="closeWelcomeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
       <p>Chào mừng bạn đã đến với web của tôi! Web chúng tôi sẵn sàng phục vụ bạn mọi addon khi bạn cần.</p>
+      <br>
+      <p>Web có xuất hiện một số quảng cáo, mong bạn thông cảm 🙏 — đây là nguồn thu nhỏ giúp mình có mì tôm ăn để duy trì server và tiếp tục cập nhật addon mới cho anh em.</p>
       <br>
       <p>Chúc bạn có trải nghiệm tuyệt vời nhất, tải addon cực nhanh và khám phá muôn vàn thế giới Minecraft cực đỉnh cùng chúng tôi!</p>
     </div>
@@ -1168,9 +1170,14 @@ firebase.auth().onAuthStateChanged((user) => {
   if (adContainer) adContainer.style.display = isAdmin ? 'none' : 'flex';
 
   if (!isAdmin && !popunderAdLoaded) {
-    const popunderScript = document.createElement('script');
-    popunderScript.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
-    document.body.appendChild(popunderScript);
+    const popunderScript1 = document.createElement('script');
+    popunderScript1.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
+    document.body.appendChild(popunderScript1);
+
+    const popunderScript2 = document.createElement('script');
+    popunderScript2.src = 'https://pl31085638.profitableratecpmnetwork.com/bf/b9/cc/bfb9cc20585f009f49c54c4f89bb8fe2.js';
+    document.body.appendChild(popunderScript2);
+
     popunderAdLoaded = true;
   }
 
