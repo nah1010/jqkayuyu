@@ -1,4 +1,3 @@
-<!-- Dữ liệu được tham chiếu và cập nhật từ[span_0](start_span)[span_0](end_span) -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -23,7 +22,6 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <script>
-  // Khởi tạo Dark Mode ngay từ đầu để tránh flash trắng
   const savedTheme = localStorage.getItem('mc_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
@@ -33,7 +31,7 @@
 :root {
   --primary: #10b981;
   --primary-dark: #059669;
-  --secondary: #f59e0b; /* Vàng cam cho badge HOT */
+  --secondary: #f59e0b;
   --bg-main: #f8fafc;
   --card-bg: #ffffff;
   --text-main: #0f172a;
@@ -52,6 +50,24 @@
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --radius-md: 12px;
   --radius-lg: 16px;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ios: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.18s;
+  --dur-base: 0.32s;
+  --dur-slow: 0.45s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 [data-theme="dark"] {
@@ -72,15 +88,25 @@
   padding: 0;
   font-family: 'Be Vietnam Pro', sans-serif;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
 }
+
+html { overscroll-behavior-y: none; }
 
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
   padding-bottom: 85px;
   min-height: 100vh;
-  transition: background-color var(--transition), color var(--transition);
+  overscroll-behavior-y: none;
+  transition: background-color var(--dur-slow) var(--ease-ios), color var(--dur-slow) var(--ease-ios);
 }
+
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+body { animation: pageIn 0.5s var(--ease-ios); }
 
 /* ===== HEADER & TÌM KIẾM ===== */
 header {
@@ -95,7 +121,7 @@ header {
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: background-color var(--transition), border-color var(--transition);
+  transition: background-color var(--dur-slow) var(--ease-ios), border-color var(--dur-slow) var(--ease-ios);
 }
 
 header { background-color: transparent; background: inherit; }
@@ -113,10 +139,11 @@ header::before {
   color: var(--primary);
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform var(--dur-fast) var(--ease-ios);
 }
-.logo:active { transform: scale(0.95); }
-.logo img { width: 32px; height: 32px; object-fit: contain; }
+.logo:active { transform: scale(0.93); }
+.logo img { width: 32px; height: 32px; object-fit: contain; transition: transform var(--dur-base) var(--ease-spring); }
+.logo:active img { transform: rotate(-8deg) scale(0.9); }
 
 .search-box {
   flex: 1;
@@ -132,13 +159,17 @@ header::before {
   color: var(--text-main);
   font-size: 14px;
   outline: none;
-  transition: all var(--transition);
+  transition: border-color var(--dur-base) var(--ease-ios),
+              background-color var(--dur-base) var(--ease-ios),
+              box-shadow var(--dur-base) var(--ease-spring-soft),
+              transform var(--dur-fast) var(--ease-ios);
 }
 
 .search-box input:focus {
   border-color: var(--primary);
   background: var(--card-bg);
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+  transform: scale(1.01);
 }
 
 .search-icon {
@@ -148,18 +179,25 @@ header::before {
   transform: translateY(-50%);
   color: var(--text-muted);
   width: 18px; height: 18px;
+  transition: color var(--dur-base) var(--ease-ios);
+  pointer-events: none;
 }
+.search-box input:focus ~ .search-icon { color: var(--primary); }
 
 .clear-search {
   position: absolute;
   right: 14px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(0.5) rotate(-90deg);
   color: var(--text-muted);
   width: 18px; height: 18px;
   cursor: pointer;
   display: none;
+  opacity: 0;
+  transition: transform var(--dur-base) var(--ease-spring), opacity var(--dur-fast) var(--ease-ios), color var(--dur-fast) var(--ease-ios);
 }
+.clear-search.show { display: block; opacity: 1; transform: translateY(-50%) scale(1) rotate(0deg); }
+.clear-search:active { color: var(--danger); transform: translateY(-50%) scale(0.85); }
 
 .theme-toggle {
   background: none; border: none;
@@ -167,10 +205,12 @@ header::before {
   cursor: pointer;
   padding: 6px;
   border-radius: 50%;
-  transition: background var(--transition), color var(--transition);
+  transition: background var(--dur-base) var(--ease-ios), color var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring), opacity var(--dur-fast) var(--ease-ios);
   display: flex; align-items: center; justify-content: center;
 }
 .theme-toggle:hover { background: var(--bg-main); color: var(--primary); }
+.theme-toggle:active { transform: scale(0.85) rotate(-25deg); }
+.theme-toggle i { transition: transform var(--dur-slow) var(--ease-spring); }
 
 /* ===== NỘI DUNG CHÍNH & TABS ===== */
 .main-content {
@@ -181,12 +221,28 @@ header::before {
 
 .tab-pane {
   display: none;
-  animation: fadeIn 0.4s ease;
 }
-.tab-pane.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.tab-pane.active { display: block; animation: tabIn var(--dur-slow) var(--ease-snappy); }
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-.category-section { margin-bottom: 32px; position: relative; }
+.category-section {
+  margin-bottom: 32px;
+  position: relative;
+  animation: sectionIn var(--dur-slow) var(--ease-snappy) backwards;
+}
+.category-section:nth-child(1) { animation-delay: 0.02s; }
+.category-section:nth-child(2) { animation-delay: 0.07s; }
+.category-section:nth-child(3) { animation-delay: 0.12s; }
+.category-section:nth-child(4) { animation-delay: 0.17s; }
+.category-section:nth-child(5) { animation-delay: 0.22s; }
+.category-section:nth-child(n+6) { animation-delay: 0.26s; }
+@keyframes sectionIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .category-title {
   font-size: 18px;
@@ -197,7 +253,8 @@ header::before {
   align-items: center;
   gap: 8px;
 }
-.category-title i { color: var(--primary); }
+.category-title i { color: var(--primary); transition: transform var(--dur-base) var(--ease-spring); }
+.category-title:active i { transform: scale(0.85) rotate(-10deg); }
 
 /* ===== SLIDER ===== */
 .slider-container { position: relative; width: 100%; }
@@ -216,7 +273,7 @@ header::before {
 .slider-btn {
   position: absolute;
   top: 50%;
-  transform: translateY(-70%);
+  transform: translateY(-70%) scale(1);
   width: 36px; height: 36px;
   border-radius: 50%;
   background: var(--card-bg);
@@ -226,13 +283,19 @@ header::before {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.2s;
+  transition: background var(--dur-base) var(--ease-ios),
+              color var(--dur-base) var(--ease-ios),
+              border-color var(--dur-base) var(--ease-ios),
+              transform var(--dur-base) var(--ease-spring),
+              opacity var(--dur-fast) var(--ease-ios),
+              visibility var(--dur-fast);
   opacity: 0; visibility: hidden;
 }
 @media (min-width: 768px) {
   .slider-container:hover .slider-btn { opacity: 1; visibility: visible; }
 }
-.slider-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.slider-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-70%) scale(1.1); }
+.slider-btn:active { transform: translateY(-70%) scale(0.9); }
 .slider-btn.prev { left: -10px; }
 .slider-btn.next { right: -10px; }
 
@@ -243,20 +306,43 @@ header::before {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: transform var(--dur-base) var(--ease-spring-soft),
+              border-color var(--dur-base) var(--ease-ios),
+              box-shadow var(--dur-base) var(--ease-ios),
+              background-color var(--dur-slow) var(--ease-ios);
   display: flex; flex-direction: column;
   position: relative;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  animation: cardIn var(--dur-slow) var(--ease-snappy) backwards;
+  will-change: transform;
 }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.addon-card:nth-child(1) { animation-delay: 0.02s; }
+.addon-card:nth-child(2) { animation-delay: 0.06s; }
+.addon-card:nth-child(3) { animation-delay: 0.10s; }
+.addon-card:nth-child(4) { animation-delay: 0.14s; }
+.addon-card:nth-child(5) { animation-delay: 0.18s; }
+.addon-card:nth-child(6) { animation-delay: 0.22s; }
+.addon-card:nth-child(7) { animation-delay: 0.26s; }
+.addon-card:nth-child(8) { animation-delay: 0.30s; }
+.addon-card:nth-child(n+9) { animation-delay: 0.32s; }
 
 @media (min-width: 500px) { .addon-card { min-width: 170px; max-width: 170px; } }
 @media (min-width: 768px) { .addon-card { min-width: 190px; max-width: 190px; } }
 
 .addon-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) scale(1.015);
   border-color: var(--primary);
   box-shadow: var(--shadow-primary);
+}
+.addon-card:active {
+  transform: translateY(-2px) scale(0.965);
+  transition-duration: var(--dur-fast);
 }
 
 .addon-img-wrapper {
@@ -270,9 +356,10 @@ header::before {
 .addon-img {
   width: 100%; height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform var(--dur-slow) var(--ease-ios);
 }
-.addon-card:hover .addon-img { transform: scale(1.08); }
+.addon-card:hover .addon-img { transform: scale(1.1); }
+.addon-card:active .addon-img { transform: scale(1.02); }
 
 .addon-img-wrapper::after {
   content: '';
@@ -292,6 +379,12 @@ header::before {
   padding: 3px 8px; border-radius: 6px;
   color: white; letter-spacing: 0.5px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  animation: badgePop var(--dur-base) var(--ease-spring) backwards;
+  animation-delay: 0.15s;
+}
+@keyframes badgePop {
+  from { opacity: 0; transform: scale(0.5) translateX(-6px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
 }
 .badge-new { background: var(--primary); }
 .badge-hot { background: var(--secondary); background: linear-gradient(135deg, #f59e0b, #ef4444); }
@@ -304,9 +397,10 @@ header::before {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 10;
   backdrop-filter: blur(4px);
-  transition: all 0.2s;
+  transition: transform var(--dur-base) var(--ease-spring), background var(--dur-fast) var(--ease-ios);
 }
-.card-delete-btn:hover { background: #dc2626; transform: scale(1.1); }
+.card-delete-btn:hover { background: #dc2626; transform: scale(1.12) rotate(8deg); }
+.card-delete-btn:active { transform: scale(0.85) rotate(0deg); }
 
 .addon-info {
   padding: 12px; flex: 1;
@@ -339,8 +433,9 @@ header::before {
 .dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--border); cursor: pointer;
-  transition: all 0.3s ease;
+  transition: width var(--dur-base) var(--ease-spring), background var(--dur-base) var(--ease-ios);
 }
+.dot:active { transform: scale(0.8); }
 .dot.active {
   background: var(--primary);
   width: 20px; border-radius: 100px;
@@ -354,10 +449,16 @@ header::before {
   border-radius: var(--radius-lg);
   padding: 20px; margin-bottom: 24px;
   display: flex; flex-direction: column; align-items: flex-start;
-  transition: transform 0.2s;
+  transition: transform var(--dur-base) var(--ease-spring-soft), box-shadow var(--dur-base) var(--ease-ios);
+  animation: sectionIn var(--dur-slow) var(--ease-snappy) backwards;
 }
 .popular-banner:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.popular-banner:active {
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: var(--dur-fast);
 }
 
 .rainbow-text {
@@ -392,22 +493,30 @@ header::before {
   color: var(--text-muted); font-size: 11px; font-weight: 500;
   cursor: pointer; background: none; border: none;
   width: 25%; height: 100%; justify-content: center;
-  position: relative; transition: color 0.2s;
+  position: relative; transition: color var(--dur-base) var(--ease-ios);
 }
 
-.nav-item i { transition: transform 0.2s, stroke 0.2s; }
-.nav-img-icon { width: 24px; height: 24px; filter: grayscale(1); transition: all 0.3s; }
+.nav-item i { transition: transform var(--dur-base) var(--ease-spring), stroke var(--dur-base) var(--ease-ios); }
+.nav-img-icon { width: 24px; height: 24px; filter: grayscale(1); transition: filter var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring); }
+
+.nav-item:active i,
+.nav-item:active .nav-img-icon { transform: scale(0.82); }
 
 .nav-item.active { color: var(--primary); font-weight: 700; }
-.nav-item.active i { transform: translateY(-2px); stroke: var(--primary); }
-.nav-item.active .nav-img-icon { filter: grayscale(0) drop-shadow(0 2px 4px rgba(245,158,11,0.4)); transform: translateY(-2px) scale(1.1); }
+.nav-item.active i { transform: translateY(-2px) scale(1.08); stroke: var(--primary); }
+.nav-item.active .nav-img-icon { filter: grayscale(0) drop-shadow(0 2px 4px rgba(245,158,11,0.4)); transform: translateY(-2px) scale(1.15); }
+.nav-item.active:active i { transform: translateY(-2px) scale(0.9); }
+.nav-item.active:active .nav-img-icon { transform: translateY(-2px) scale(0.95); }
+
+.nav-item span { display: inline-block; transition: transform var(--dur-base) var(--ease-spring); }
+.nav-item.active span { transform: translateY(-1px); }
 
 /* Chỉ báo trượt chia 4 tab */
 .nav-indicator {
   position: absolute; top: 0; left: 0; height: 3px; width: 25%;
   background: var(--primary);
   border-radius: 0 0 4px 4px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--dur-slow) var(--ease-spring);
 }
 
 /* ===== FLOATING BUTTONS ===== */
@@ -422,27 +531,33 @@ header::before {
   display: flex; align-items: center; justify-content: center;
   box-shadow: var(--shadow-md);
   cursor: pointer; border: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+  transition: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-base) var(--ease-ios), background-color var(--dur-base) var(--ease-ios);
+  animation: popIn 0.55s var(--ease-spring) backwards;
 }
-@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes popIn { 0% { transform: scale(0) rotate(-30deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
 
-.floating-btn:hover { transform: scale(1.08); box-shadow: var(--shadow-lg); }
-.floating-btn:active { transform: scale(0.95); }
+.floating-btn:hover { transform: scale(1.1) translateY(-2px); box-shadow: var(--shadow-lg); }
+.floating-btn:active { transform: scale(0.88); transition-duration: var(--dur-fast); }
 .floating-btn.zalo-btn { background-color: #0068ff; }
 .floating-btn.logout-btn { background-color: var(--danger); }
+.floating-btn i { transition: transform var(--dur-base) var(--ease-spring); }
+.floating-btn:active i { transform: rotate(-15deg); }
 
 /* ===== MODAL & FORM ===== */
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: var(--overlay);
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
   display: flex; align-items: center; justify-content: center;
   z-index: 200; opacity: 0; pointer-events: none;
-  transition: opacity 0.3s ease; padding: 16px;
+  transition: opacity var(--dur-slow) var(--ease-ios), backdrop-filter var(--dur-slow) var(--ease-ios), -webkit-backdrop-filter var(--dur-slow) var(--ease-ios);
+  padding: 16px;
 }
 
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-overlay.active {
+  opacity: 1; pointer-events: auto;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
 
 .modal-box {
   background: var(--card-bg);
@@ -451,10 +566,11 @@ header::before {
   width: 100%; max-width: 450px; max-height: 85vh;
   display: flex; flex-direction: column;
   box-shadow: var(--shadow-lg);
-  transform: scale(0.95) translateY(10px);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(0.9) translateY(28px);
+  opacity: 0;
+  transition: transform var(--dur-slow) var(--ease-spring), opacity var(--dur-base) var(--ease-ios);
 }
-.modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+.modal-overlay.active .modal-box { transform: scale(1) translateY(0); opacity: 1; }
 
 .modal-header {
   padding: 16px 20px;
@@ -468,9 +584,10 @@ header::before {
   background: var(--bg-main); border: none;
   width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  transition: background var(--dur-base) var(--ease-ios), color var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring);
 }
-.close-x:hover { background: #fee2e2; color: var(--danger); }
+.close-x:hover { background: #fee2e2; color: var(--danger); transform: rotate(90deg); }
+.close-x:active { transform: rotate(90deg) scale(0.85); }
 
 .modal-body {
   padding: 20px; font-size: 14px; line-height: 1.6;
@@ -490,15 +607,20 @@ header::before {
   font-size: 14px; font-weight: 600;
   cursor: pointer; border: none;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  transition: all 0.2s;
+  transition: background-color var(--dur-base) var(--ease-ios),
+              filter var(--dur-base) var(--ease-ios),
+              transform var(--dur-base) var(--ease-spring),
+              box-shadow var(--dur-base) var(--ease-ios);
 }
-.btn:active { transform: scale(0.97); }
+.btn:active { transform: scale(0.94); transition-duration: var(--dur-fast); }
 .btn-primary { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
-.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
 .btn-secondary { background: var(--border); color: var(--text-main); }
 .btn-secondary:hover { filter: brightness(0.95); }
 .btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { transform: translateY(-1px); filter: brightness(1.08); }
 .btn-warning { background: var(--warning); color: white; }
+.btn-warning:hover { transform: translateY(-1px); filter: brightness(1.08); }
 
 .form-group { margin-bottom: 16px; }
 .form-group label {
@@ -509,10 +631,11 @@ header::before {
   width: 100%; padding: 12px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg-main);
   color: var(--text-main); font-size: 14px; outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-base) var(--ease-ios), box-shadow var(--dur-base) var(--ease-ios);
 }
 .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
@@ -537,23 +660,31 @@ header::before {
 
 /* ===== TIỆN ÍCH ===== */
 .toast {
-  position: fixed; top: 20px; left: 50%; transform: translate(-50%, -20px);
+  position: fixed; top: 20px; left: 50%; transform: translate(-50%, -30px) scale(0.9);
   background: var(--text-main); color: var(--bg-main);
   padding: 12px 24px; border-radius: 100px;
   font-size: 14px; font-weight: 500;
   z-index: 500; box-shadow: var(--shadow-lg);
   opacity: 0; pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: transform var(--dur-slow) var(--ease-spring), opacity var(--dur-base) var(--ease-ios);
   display: flex; align-items: center; gap: 8px;
 }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
 
 .empty-state {
   text-align: center; padding: 60px 20px;
   color: var(--text-muted); font-size: 15px;
   display: flex; flex-direction: column; align-items: center; gap: 12px;
+  animation: sectionIn var(--dur-slow) var(--ease-snappy);
 }
-.empty-state i { width: 48px; height: 48px; color: var(--border); margin-bottom: 8px; }
+.empty-state i {
+  width: 48px; height: 48px; color: var(--border); margin-bottom: 8px;
+  animation: floatIcon 3s var(--ease-ios) infinite;
+}
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
 
 /* Skeleton Loading */
 .skeleton-card {
@@ -564,10 +695,11 @@ header::before {
 @media (min-width: 500px) { .skeleton-card { min-width: 170px; max-width: 170px; height: 215px;} }
 @media (min-width: 768px) { .skeleton-card { min-width: 190px; max-width: 190px; height: 235px;} }
 
-.skeleton-img { height: 120px; background: var(--border); animation: pulse 1.5s infinite; }
-.skeleton-text { height: 14px; background: var(--border); margin: 12px; border-radius: 4px; animation: pulse 1.5s infinite; }
+.skeleton-img { height: 120px; background: var(--border); animation: pulse 1.4s var(--ease-ios) infinite; }
+.skeleton-text { height: 14px; background: var(--border); margin: 12px; border-radius: 4px; animation: pulse 1.4s var(--ease-ios) infinite; }
 .skeleton-text.short { width: 60%; margin-top: 0; }
-@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+.skeleton-card { animation: pulse 1.4s var(--ease-ios) infinite; }
 
 </style>
 </head>
@@ -630,6 +762,27 @@ header::before {
         Chuyển đổi Behavior Pack để giữ hoặc loại bỏ cản trở thành tựu trong Minecraft!
       </p>
     </div>
+
+    <div id="translateToolBanner" class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openTranslateModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="languages" style="color: var(--danger);"></i>
+        Việt hoá addon BETA ( Tự động )
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Tự động quét và dịch các ngôn ngữ tiếng Anh trong file Behavior Pack sang tiếng Việt!
+      </p>
+    </div>
+
+    <div id="editAddonToolBanner" class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openEditAddonModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="edit-3" style="color: var(--danger);"></i>
+        Chỉnh sửa thông tin Addon (Tên, Mô tả, Ảnh)
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Cá nhân hóa addon của bạn bằng cách đổi tên, viết lại mô tả và thiết lập icon mới dễ dàng!
+      </p>
+    </div>
+
   </div>
 </div>
 
@@ -848,6 +1001,77 @@ header::before {
   </div>
 </div>
 
+<div id="translateModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="languages" style="color:var(--primary);"></i> Việt hoá Addon</span>
+      <button class="close-x" onclick="closeTranslateModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Mục 1: Chọn addon ( tối đa 30mb ) *</label>
+        <input type="file" id="translateFileInput" accept=".mcaddon">
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yêu cầu bắt buộc file có đuôi .mcaddon</p>
+      </div>
+      <p style="font-size: 13px; color: var(--warning); font-weight: 500; margin-top: 12px;">
+        Lưu ý: Quá trình dịch có thể mất thời gian tuỳ vào độ lớn của file. Vui lòng không tắt trình duyệt trong quá trình này!
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTranslateModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitTranslateAddon()"><i data-lucide="check-circle"></i> Đồng ý</button>
+    </div>
+  </div>
+</div>
+
+<div id="editAddonModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="edit-3" style="color:var(--primary);"></i> Chỉnh sửa Addon</span>
+      <button class="close-x" onclick="closeEditAddonModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" style="padding-bottom: 0;">
+      <div class="form-group">
+        <label>1. Gửi Addon (.mcaddon, tối đa 30MB) *</label>
+        <input type="file" id="editAddonFileInput" accept=".mcaddon,.mcaddon.zip">
+      </div>
+      
+      <div class="form-group">
+        <label>2. Sửa tên addon (Tối thiểu 6 chữ, bỏ trống nếu không đổi)</label>
+        <input type="text" id="editAddonName" placeholder="Nhập tên mới...">
+      </div>
+
+      <div class="form-group">
+        <label>3. Sửa mô tả addon (Tối thiểu 6 chữ, bỏ trống nếu không đổi)</label>
+        <textarea id="editAddonDesc" placeholder="Nhập mô tả mới..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>4. Sửa ảnh addon (Bỏ trống nếu không đổi, chỉ nhận jpg, jpeg, png)</label>
+        <input type="file" id="editAddonImg" accept=".jpg,.jpeg,.png" onchange="handleEditImgUpload(event)" style="padding: 8px;">
+        
+        <div id="editCropEditor" class="crop-editor-container">
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;"><i data-lucide="mouse" style="width:12px; display:inline-block;"></i> Lăn chuột để Phóng to/Thu nhỏ. Kéo thả để chọn vùng ảnh.</p>
+          <div class="img-container">
+            <img id="editImageToCrop" src="">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="zoomEditCropper(0.1)" title="Phóng to"><i data-lucide="zoom-in"></i></button>
+            <button type="button" class="btn btn-secondary" onclick="zoomEditCropper(-0.1)" title="Thu nhỏ"><i data-lucide="zoom-out"></i></button>
+            <button type="button" class="btn btn-primary" style="flex:1;" onclick="applyEditCrop()"><i data-lucide="crop"></i> Cắt Ảnh</button>
+          </div>
+        </div>
+        
+        <img id="editImgPreview" src="" style="display:none; width:100%; height:180px; object-fit:cover; margin-top:12px; border-radius:8px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEditAddonModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitEditAddon()"><i data-lucide="check-circle"></i> Đồng ý</button>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast"><i data-lucide="check-circle" style="color: #10b981;"></i> <span id="toastMsg"></span></div>
 
 <script>
@@ -861,8 +1085,14 @@ function toggleTheme() {
   localStorage.setItem('mc_theme', next);
   
   const btn = document.getElementById('themeToggle');
-  btn.innerHTML = next === 'dark' ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
-  lucide.createIcons({ root: btn });
+  btn.style.transform = 'scale(0.7) rotate(90deg)';
+  btn.style.opacity = '0';
+  setTimeout(() => {
+    btn.innerHTML = next === 'dark' ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+    lucide.createIcons({ root: btn });
+    btn.style.transform = 'scale(1) rotate(0deg)';
+    btn.style.opacity = '1';
+  }, 140);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -875,7 +1105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function toggleClearBtn() {
   const input = document.getElementById('searchInput');
   const btn = document.getElementById('clearSearchBtn');
-  btn.style.display = input.value.length > 0 ? 'block' : 'none';
+  btn.classList.toggle('show', input.value.length > 0);
 }
 function clearSearch() {
   document.getElementById('searchInput').value = '';
@@ -907,7 +1137,9 @@ const CATEGORIES = [
 let addons = [];
 let downloadedIds = JSON.parse(localStorage.getItem('mc_downloaded_ids')) || [];
 let uploadedImgBase64 = "";
+let editUploadedImgBase64 = "";
 let cropper = null;
+let editCropper = null;
 let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
@@ -961,6 +1193,141 @@ function closeConvertModal() {
   document.getElementById('convertModal').classList.remove('active');
 }
 
+function openTranslateModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  document.getElementById('translateFileInput').value = '';
+  document.getElementById('translateModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('translateModal') });
+}
+
+function closeTranslateModal() {
+  document.getElementById('translateModal').classList.remove('active');
+}
+
+async function translateEnglishToVietnamese(text) {
+  if (!text.trim() || !text.includes(' ') || text.includes('_') || text.includes(':') || text.includes('/') || text.includes('.') || text.includes('{') || text.includes('}')) {
+    return text;
+  }
+  try {
+    let url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(text)}`;
+    let response = await fetch(url);
+    let data = await response.json();
+    return data[0][0][0];
+  } catch (e) {
+    return text;
+  }
+}
+
+async function processTextTranslation(content) {
+  content = content.replace(/(?:^|\s)\/\/.*$/gm, '');
+  let regex = /"([^"\\]+)"/g;
+  let matches = [...content.matchAll(regex)];
+  let newContent = content;
+  
+  for (let match of matches) {
+    let originalText = match[1];
+    let translatedText = await translateEnglishToVietnamese(originalText);
+    if (originalText !== translatedText) {
+      newContent = newContent.replace('"' + originalText + '"', '"' + translatedText + '"');
+    }
+  }
+  return newContent;
+}
+
+async function submitTranslateAddon() {
+  const fileInput = document.getElementById('translateFileInput');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    showToast("Vui lòng chọn file addon!");
+    return;
+  }
+
+  if (file.size > 30 * 1024 * 1024) {
+    showToast("File vượt quá kích thước 30MB cho phép!");
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith('.mcaddon')) {
+    showToast(" Không Tìm Thấy Addon, Vui Lòng Kiểm Tra Lại ");
+    return;
+  }
+
+  showToast("ĐANG VIỆT HOÁ, VUI LÒNG ĐỢI VÀI PHÚT...");
+  closeTranslateModal();
+
+  try {
+    const renamedFile = new File([file], file.name + ".zip", { type: "application/zip" });
+    const zip = new JSZip();
+    let loadedZip;
+    
+    try {
+      loadedZip = await zip.loadAsync(renamedFile);
+    } catch (e) {
+      showToast("Không thể giải nén addon, hãy kiểm tra lại file");
+      return;
+    }
+
+    let directories = new Set();
+    loadedZip.forEach((relativePath) => {
+      let firstDir = relativePath.split('/')[0];
+      if (firstDir) directories.add(firstDir);
+    });
+
+    let bpDir = null;
+    let rpDir = null;
+
+    for (let dir of directories) {
+      let hasTextures = Object.keys(loadedZip.files).some(p => p.toLowerCase().startsWith((dir + "/textures/").toLowerCase()));
+      if (hasTextures) {
+        rpDir = dir;
+      } else {
+        bpDir = dir;
+      }
+    }
+
+    if (!bpDir) {
+      showToast("Lỗi: Addon này chỉ chứa Resource Pack, không thể dịch!");
+      return;
+    }
+
+    let filePromises = [];
+    
+    for (let relativePath in loadedZip.files) {
+      if (!loadedZip.files[relativePath].dir && relativePath.startsWith(bpDir + "/")) {
+        if (relativePath.includes('functions/')) {
+          continue;
+        }
+        if (relativePath.endsWith('.json') || relativePath.endsWith('.js')) {
+          filePromises.push(async () => {
+            let fileData = await loadedZip.file(relativePath).async("string");
+            let translatedData = await processTextTranslation(fileData);
+            loadedZip.file(relativePath, translatedData);
+          });
+        }
+      }
+    }
+
+    for (let task of filePromises) {
+      await task();
+    }
+
+    const content = await loadedZip.generateAsync({ type: "blob" });
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(content);
+    downloadLink.download = "[VIETHOA]_" + file.name;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    showToast("Đã Việt hoá và tải file addon thành công!");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Có lỗi xảy ra trong quá trình xử lý!");
+  }
+}
+
 async function submitConvertAddon() {
   const fileInput = document.getElementById('convertFileInput');
   const option = document.getElementById('convertOption').value;
@@ -972,7 +1339,7 @@ async function submitConvertAddon() {
   }
 
   if (file.size > 30 * 7680 * 7680) {
-    showToast("File vượt quá kích thước 4MB cho phép!");
+    showToast("File vượt quá kích thước cho phép!");
     return;
   }
 
@@ -1012,9 +1379,6 @@ async function submitConvertAddon() {
 
     let targetManifestPath = manifestPaths[0];
 
-    // ==========================================
-    // LOGIC KIỂM TRA CHÉO 2 FILE NHƯ BẠN YÊU CẦU
-    // ==========================================
     if (manifestPaths.length === 2) {
       let pack1Dir = manifestPaths[0].substring(0, manifestPaths[0].lastIndexOf('/') + 1);
       let pack2Dir = manifestPaths[1].substring(0, manifestPaths[1].lastIndexOf('/') + 1);
@@ -1022,16 +1386,12 @@ async function submitConvertAddon() {
       let pack1HasTextures = Object.keys(loadedZip.files).some(p => p.toLowerCase().startsWith((pack1Dir + "textures/").toLowerCase()));
       let pack2HasTextures = Object.keys(loadedZip.files).some(p => p.toLowerCase().startsWith((pack2Dir + "textures/").toLowerCase()));
 
-      // Nếu Pack 1 có textures (Resource Pack) -> Chốt Pack 2 là Behavior Pack
       if (pack1HasTextures && !pack2HasTextures) {
         targetManifestPath = manifestPaths[1];
-      } 
-      // Nếu Pack 2 có textures (Resource Pack) -> Chốt Pack 1 là Behavior Pack
-      else if (pack2HasTextures && !pack1HasTextures) {
+      } else if (pack2HasTextures && !pack1HasTextures) {
         targetManifestPath = manifestPaths[0];
       }
     } else if (manifestPaths.length > 2) {
-      // Dự phòng nếu có nhiều hơn 2 manifest (lọc bỏ các pack chứa textures)
       let bpManifest = manifestPaths.find(mPath => {
         let baseDir = mPath.substring(0, mPath.lastIndexOf('/') + 1);
         return !Object.keys(loadedZip.files).some(rPath => rPath.toLowerCase().startsWith((baseDir + "textures/").toLowerCase()));
@@ -1039,7 +1399,6 @@ async function submitConvertAddon() {
       if (bpManifest) targetManifestPath = bpManifest;
     }
 
-    // Đọc manifest của Behavior Pack đã chốt
     const manifestFile = loadedZip.file(targetManifestPath);
     if (!manifestFile) {
       showToast("Không tìm thấy manifest để chỉnh sửa");
@@ -1055,7 +1414,6 @@ async function submitConvertAddon() {
       return;
     }
 
-    // Chỉnh sửa Metadata
     if (option === "no_loss") {
       if (!manifestJson.metadata) manifestJson.metadata = {};
       manifestJson.metadata.product_type = "addon";
@@ -1063,11 +1421,9 @@ async function submitConvertAddon() {
       if (manifestJson.metadata) delete manifestJson.metadata.product_type;
     }
 
-    // Ghi đè lại manifest.json duy nhất của Behavior Pack
     loadedZip.file(targetManifestPath, JSON.stringify(manifestJson, null, 2));
     const content = await loadedZip.generateAsync({ type: "blob" });
 
-    // Xuất file
     const prefix = option === "no_loss" ? "[KhongMatThanhTuu]_" : "[MatThanhTuu]_";
     const downloadLink = document.createElement('a');
     downloadLink.href = URL.createObjectURL(content);
@@ -1083,7 +1439,6 @@ async function submitConvertAddon() {
     showToast("Có lỗi xảy ra trong quá trình xử lý!");
   }
 }
-
 
 function handleImgUpload(e) {
   let file = e.target.files[0];
@@ -1434,16 +1789,194 @@ function downloadCurrentAddon() {
 }
 
 function switchTab(tabId, el) {
+  const currentActive = document.querySelector('.tab-pane.active');
+  if (currentActive && currentActive.id === tabId) return;
+
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
+
+  const nextPane = document.getElementById(tabId);
+  nextPane.classList.add('active');
   el.classList.add('active');
-  
+
   let index = Array.from(el.parentNode.children).filter(c => c.classList.contains('nav-item')).indexOf(el);
   document.getElementById('navIndicator').style.transform = `translateX(${index * 100}%)`;
-  
+
   if(tabId === 'tabDownloaded') renderDownloaded();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openEditAddonModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  document.getElementById('editAddonFileInput').value = "";
+  document.getElementById('editAddonName').value = "";
+  document.getElementById('editAddonDesc').value = "";
+  document.getElementById('editAddonImg').value = "";
+  
+  if (editCropper) { editCropper.destroy(); editCropper = null; }
+  document.getElementById('editCropEditor').style.display = 'none';
+  document.getElementById('editImgPreview').style.display = 'none';
+  editUploadedImgBase64 = "";
+  
+  document.getElementById('editAddonModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('editAddonModal') });
+}
+
+function closeEditAddonModal() {
+  document.getElementById('editAddonModal').classList.remove('active');
+  if (editCropper) { editCropper.destroy(); editCropper = null; }
+}
+
+function handleEditImgUpload(e) {
+  let file = e.target.files[0];
+  if (!file) return;
+  
+  let ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'webp' || !['jpg', 'jpeg', 'png'].includes(ext)) {
+    showToast("Lỗi: Chỉ nhận ảnh đuôi jpg, jpeg, png!");
+    e.target.value = "";
+    return;
+  }
+  
+  let reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('editImgPreview').style.display = 'none';
+    document.getElementById('editCropEditor').style.display = 'block';
+    let imgElement = document.getElementById('editImageToCrop');
+    imgElement.src = evt.target.result;
+    
+    if (editCropper) editCropper.destroy();
+    editCropper = new Cropper(imgElement, {
+      aspectRatio: 1, viewMode: 1, autoCropArea: 1, zoomable: true, background: false
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function zoomEditCropper(ratio) { if (editCropper) editCropper.zoom(ratio); }
+
+function applyEditCrop() {
+  if (!editCropper) return;
+  let canvas = editCropper.getCroppedCanvas({ maxWidth: 256, maxHeight: 256 });
+  editUploadedImgBase64 = canvas.toDataURL("image/png", 1.0);
+  editCropper.destroy(); editCropper = null;
+  document.getElementById('editCropEditor').style.display = 'none';
+  let preview = document.getElementById('editImgPreview');
+  preview.src = editUploadedImgBase64;
+  preview.style.display = 'block';
+  showToast("Lưu ảnh thành công!");
+}
+
+async function submitEditAddon() {
+  const fileInput = document.getElementById('editAddonFileInput');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    showToast("Vui lòng chọn file addon!");
+    return;
+  }
+
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.mcaddon') && !fileName.endsWith('.mcaddon.zip')) {
+    showToast("Không Tìm Thấy Addon, Vui Lòng Kiểm Tra Lại");
+    return;
+  }
+
+  if (file.size > 30 * 1024 * 1024) {
+    showToast("File vượt quá kích thước 30MB!");
+    return;
+  }
+
+  let nameVal = document.getElementById('editAddonName').value.trim();
+  let descVal = document.getElementById('editAddonDesc').value.trim();
+
+  const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+
+  if (nameVal.length > 0) {
+    if (nameVal.length < 6) { showToast("Tên addon phải có tối thiểu 6 chữ cái!"); return; }
+    if (emojiRegex.test(nameVal)) { showToast("Tên addon không được chứa emoji!"); return; }
+  }
+
+  if (descVal.length > 0) {
+    if (descVal.length < 6) { showToast("Mô tả phải có tối thiểu 6 chữ cái!"); return; }
+    if (emojiRegex.test(descVal)) { showToast("Mô tả không được chứa emoji!"); return; }
+  }
+
+  if (editCropper) applyEditCrop();
+
+  showToast("ĐANG XỬ LÝ ADDON, VUI LÒNG ĐỢI...");
+  closeEditAddonModal();
+
+  try {
+    const renamedFile = new File([file], file.name + ".zip", { type: "application/zip" });
+    const zip = new JSZip();
+    let loadedZip;
+
+    try {
+      loadedZip = await zip.loadAsync(renamedFile);
+    } catch (e) {
+      showToast("Lỗi: Không thể giải nén addon");
+      return;
+    }
+
+    let manifestPaths = [];
+    loadedZip.forEach((relativePath) => {
+      if (relativePath.toLowerCase().endsWith('manifest.json')) {
+        manifestPaths.push(relativePath);
+      }
+    });
+
+    if (manifestPaths.length < 2) {
+      showToast("Lỗi: Không tìm thấy đủ manifest trong Behavior và Resource pack!");
+      return;
+    }
+
+    for (let mPath of manifestPaths) {
+      let manifestFile = loadedZip.file(mPath);
+      let manifestText = await manifestFile.async("string");
+      let manifestJson;
+
+      try {
+        manifestJson = JSON.parse(manifestText);
+      } catch(e) {
+        continue;
+      }
+
+      if (nameVal.length > 0) {
+        if (manifestJson.header) manifestJson.header.name = nameVal;
+      }
+
+      if (descVal.length > 0) {
+        if (manifestJson.header) manifestJson.header.description = descVal;
+        if (manifestJson.modules && manifestJson.modules.length > 0) {
+          manifestJson.modules.forEach(m => m.description = descVal);
+        }
+      }
+
+      loadedZip.file(mPath, JSON.stringify(manifestJson, null, 2));
+
+      if (editUploadedImgBase64) {
+        let dirPath = mPath.substring(0, mPath.lastIndexOf('/') + 1);
+        let iconPath = dirPath + "pack_icon.png";
+        let base64Data = editUploadedImgBase64.split(',')[1];
+        loadedZip.file(iconPath, base64Data, {base64: true});
+      }
+    }
+
+    const content = await loadedZip.generateAsync({ type: "blob" });
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(content);
+    downloadLink.download = "[EDITED]_" + file.name.replace('.zip', '');
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    showToast("Đã sửa và tải file addon thành công!");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Có lỗi xảy ra trong quá trình xử lý!");
+  }
 }
 </script>
 </body>
