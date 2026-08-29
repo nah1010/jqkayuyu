@@ -1,3 +1,4 @@
+<!-- Dữ liệu được tham chiếu và cập nhật từ[span_0](start_span)[span_0](end_span) -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -16,6 +17,8 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -84,7 +87,6 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(var(--card-bg-rgb), 0.85); /* Cần fallback hoặc set trong JS, dùng bg-color dưới */
   background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -96,7 +98,6 @@ header {
   transition: background-color var(--transition), border-color var(--transition);
 }
 
-/* Đổi bg header trong suốt một chút */
 header { background-color: transparent; background: inherit; }
 header::before {
   content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
@@ -206,9 +207,9 @@ header::before {
   gap: 16px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 4px 4px 16px 4px; /* Padding để shadow không bị cắt */
+  padding: 4px 4px 16px 4px;
   scrollbar-width: none;
-  margin: -4px; /* Bù trừ padding */
+  margin: -4px;
 }
 .addon-slider::-webkit-scrollbar { display: none; }
 
@@ -273,7 +274,6 @@ header::before {
 }
 .addon-card:hover .addon-img { transform: scale(1.08); }
 
-/* Gradient mờ đáy ảnh */
 .addon-img-wrapper::after {
   content: '';
   position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
@@ -354,6 +354,10 @@ header::before {
   border-radius: var(--radius-lg);
   padding: 20px; margin-bottom: 24px;
   display: flex; flex-direction: column; align-items: flex-start;
+  transition: transform 0.2s;
+}
+.popular-banner:hover {
+  transform: translateY(-2px);
 }
 
 .rainbow-text {
@@ -387,7 +391,7 @@ header::before {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   color: var(--text-muted); font-size: 11px; font-weight: 500;
   cursor: pointer; background: none; border: none;
-  width: 33.33%; height: 100%; justify-content: center;
+  width: 25%; height: 100%; justify-content: center;
   position: relative; transition: color 0.2s;
 }
 
@@ -398,9 +402,9 @@ header::before {
 .nav-item.active i { transform: translateY(-2px); stroke: var(--primary); }
 .nav-item.active .nav-img-icon { filter: grayscale(0) drop-shadow(0 2px 4px rgba(245,158,11,0.4)); transform: translateY(-2px) scale(1.1); }
 
-/* Chỉ báo trượt */
+/* Chỉ báo trượt chia 4 tab */
 .nav-indicator {
-  position: absolute; top: 0; left: 0; height: 3px; width: 33.33%;
+  position: absolute; top: 0; left: 0; height: 3px; width: 25%;
   background: var(--primary);
   border-radius: 0 0 4px 4px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -570,7 +574,7 @@ header::before {
 <body>
 
 <header>
-  <div class="logo" onclick="switchTab('tabHome', document.querySelector('.nav-item'))">
+  <div class="logo" onclick="switchTab('tabHome', document.querySelectorAll('.nav-item')[0])">
     <img src="1.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8681/8681023.png'">
     MC-ADDONS
   </div>
@@ -611,6 +615,22 @@ header::before {
     </div>
     <div id="downloadedContent" class="popular-list"></div>
   </div>
+
+  <div id="tabTools" class="tab-pane">
+    <div class="category-title">
+      <i data-lucide="wrench"></i>
+      Công Cụ Addon
+    </div>
+    <div class="popular-banner" style="cursor: pointer;" onclick="openConvertModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="refresh-cw" style="color: var(--primary);"></i>
+        Thay đổi chức năng addon ( mất thành tựu ➔ không mất thành tựu )
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Chuyển đổi Behavior Pack để giữ hoặc loại bỏ cản trở thành tựu trong Minecraft!
+      </p>
+    </div>
+  </div>
 </div>
 
 <div class="floating-container">
@@ -639,7 +659,38 @@ header::before {
     <i data-lucide="download"></i>
     <span>Đã tải</span>
   </button>
+  <button class="nav-item" onclick="switchTab('tabTools', this)">
+    <i data-lucide="plus-circle"></i>
+    <span>Thêm</span>
+  </button>
 </nav>
+
+<div id="convertModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="sliders" style="color:var(--primary);"></i> Chỉnh Sửa Chức Năng Addon</span>
+      <button class="close-x" onclick="closeConvertModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Mục 1: Gửi Addon (Chỉ Behavior Pack, tối đa 30MB) *</label>
+        <input type="file" id="convertFileInput" accept=".mcaddon,.mcpack">
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Chỉ hỗ trợ file `.mcaddon` hoặc `.mcpack`</p>
+      </div>
+      <div class="form-group">
+        <label>Mục 2: Chọn tùy chọn thành tựu *</label>
+        <select id="convertOption">
+          <option value="no_loss">Chọn không mất thành tựu</option>
+          <option value="loss">Chọn mất thành tựu</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeConvertModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitConvertAddon()"><i data-lucide="check-circle"></i> Đồng ý</button>
+    </div>
+  </div>
+</div>
 
 <div id="welcomeModal" class="modal-overlay">
   <div class="modal-box">
@@ -800,10 +851,8 @@ header::before {
 <div id="toast" class="toast"><i data-lucide="check-circle" style="color: #10b981;"></i> <span id="toastMsg"></span></div>
 
 <script>
-// Khởi tạo icon Lucide ngay
 lucide.createIcons();
 
-// Hàm Theme Toggle
 function toggleTheme() {
   const root = document.documentElement;
   const current = root.getAttribute('data-theme');
@@ -811,12 +860,11 @@ function toggleTheme() {
   root.setAttribute('data-theme', next);
   localStorage.setItem('mc_theme', next);
   
-  // Đổi icon
   const btn = document.getElementById('themeToggle');
   btn.innerHTML = next === 'dark' ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
   lucide.createIcons({ root: btn });
 }
-// Set icon theme ban đầu
+
 document.addEventListener('DOMContentLoaded', () => {
   if (document.documentElement.getAttribute('data-theme') === 'dark') {
     document.getElementById('themeToggle').innerHTML = '<i data-lucide="sun"></i>';
@@ -824,7 +872,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Hàm hiển thị nút xóa ô tìm kiếm
 function toggleClearBtn() {
   const input = document.getElementById('searchInput');
   const btn = document.getElementById('clearSearchBtn');
@@ -836,7 +883,6 @@ function clearSearch() {
   filterBySearch('');
 }
 
-// Cấu hình Firebase gốc
 const firebaseConfig = {
   apiKey: "AIzaSyB0kRaH7CgE3RQ0-tAg541HgvMl2LE6kJw",
   authDomain: "myaddon-91a1d.firebaseapp.com",
@@ -883,7 +929,6 @@ window.onload = function() {
     snapshot.forEach((doc) => {
       addons.push({ id: doc.id, ...doc.data() });
     });
-    // Xóa skeleton
     const skeleton = document.getElementById('homeSkeleton');
     if(skeleton) skeleton.remove();
     
@@ -902,15 +947,143 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function copyPhone(num) {
-  navigator.clipboard.writeText(num).then(() => showToast("Đã sao chép: " + num));
-}
-
 function closeWelcomeModal() { document.getElementById('welcomeModal').classList.remove('active'); }
 function hideWelcomeModal() { localStorage.setItem('welcome_hidden', 'true'); closeWelcomeModal(); }
 function openZaloModal() { document.getElementById('zaloModal').classList.add('active'); }
 function closeZaloModal() { document.getElementById('zaloModal').classList.remove('active'); }
 function hideZaloBubble() { closeZaloModal(); document.getElementById('zaloBtn').style.display = 'none'; }
+
+function openConvertModal() {
+  document.getElementById('convertFileInput').value = '';
+  document.getElementById('convertModal').classList.add('active');
+}
+function closeConvertModal() {
+  document.getElementById('convertModal').classList.remove('active');
+}
+
+async function submitConvertAddon() {
+  const fileInput = document.getElementById('convertFileInput');
+  const option = document.getElementById('convertOption').value;
+  const file = fileInput.files[0];
+
+  if (!file) {
+    showToast("Vui lòng chọn file addon!");
+    return;
+  }
+
+  if (file.size > 30 * 7680 * 7680) {
+    showToast("File vượt quá kích thước 4MB cho phép!");
+    return;
+  }
+
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.mcaddon') && !fileName.endsWith('.mcpack')) {
+    showToast("Không xác định được addon. Vui lòng kiểm tra lại");
+    return;
+  }
+
+  showToast("VUI LÒNG ĐỢI TÔI VÀI PHÚT...");
+  closeConvertModal();
+
+  try {
+    const renamedFileName = file.name + ".zip";
+    const renamedFile = new File([file], renamedFileName, { type: "application/zip" });
+
+    const zip = new JSZip();
+    let loadedZip;
+    try {
+      loadedZip = await zip.loadAsync(renamedFile);
+    } catch (e) {
+      showToast("Không thể giải nén addon, hãy kiểm tra lại");
+      return;
+    }
+
+    const manifestPaths = [];
+    loadedZip.forEach((relativePath) => {
+      if (relativePath.toLowerCase().endsWith('manifest.json')) {
+        manifestPaths.push(relativePath);
+      }
+    });
+
+    if (manifestPaths.length === 0) {
+      showToast("Không tìm thấy manifest");
+      return;
+    }
+
+    let targetManifestPath = manifestPaths[0];
+
+    // ==========================================
+    // LOGIC KIỂM TRA CHÉO 2 FILE NHƯ BẠN YÊU CẦU
+    // ==========================================
+    if (manifestPaths.length === 2) {
+      let pack1Dir = manifestPaths[0].substring(0, manifestPaths[0].lastIndexOf('/') + 1);
+      let pack2Dir = manifestPaths[1].substring(0, manifestPaths[1].lastIndexOf('/') + 1);
+      
+      let pack1HasTextures = Object.keys(loadedZip.files).some(p => p.toLowerCase().startsWith((pack1Dir + "textures/").toLowerCase()));
+      let pack2HasTextures = Object.keys(loadedZip.files).some(p => p.toLowerCase().startsWith((pack2Dir + "textures/").toLowerCase()));
+
+      // Nếu Pack 1 có textures (Resource Pack) -> Chốt Pack 2 là Behavior Pack
+      if (pack1HasTextures && !pack2HasTextures) {
+        targetManifestPath = manifestPaths[1];
+      } 
+      // Nếu Pack 2 có textures (Resource Pack) -> Chốt Pack 1 là Behavior Pack
+      else if (pack2HasTextures && !pack1HasTextures) {
+        targetManifestPath = manifestPaths[0];
+      }
+    } else if (manifestPaths.length > 2) {
+      // Dự phòng nếu có nhiều hơn 2 manifest (lọc bỏ các pack chứa textures)
+      let bpManifest = manifestPaths.find(mPath => {
+        let baseDir = mPath.substring(0, mPath.lastIndexOf('/') + 1);
+        return !Object.keys(loadedZip.files).some(rPath => rPath.toLowerCase().startsWith((baseDir + "textures/").toLowerCase()));
+      });
+      if (bpManifest) targetManifestPath = bpManifest;
+    }
+
+    // Đọc manifest của Behavior Pack đã chốt
+    const manifestFile = loadedZip.file(targetManifestPath);
+    if (!manifestFile) {
+      showToast("Không tìm thấy manifest để chỉnh sửa");
+      return;
+    }
+
+    const manifestText = await manifestFile.async("string");
+    let manifestJson;
+    try {
+      manifestJson = JSON.parse(manifestText);
+    } catch (e) {
+      showToast("File manifest.json bị lỗi định dạng!");
+      return;
+    }
+
+    // Chỉnh sửa Metadata
+    if (option === "no_loss") {
+      if (!manifestJson.metadata) manifestJson.metadata = {};
+      manifestJson.metadata.product_type = "addon";
+    } else {
+      if (manifestJson.metadata) delete manifestJson.metadata.product_type;
+    }
+
+    // Ghi đè lại manifest.json duy nhất của Behavior Pack
+    loadedZip.file(targetManifestPath, JSON.stringify(manifestJson, null, 2));
+    const content = await loadedZip.generateAsync({ type: "blob" });
+
+    // Xuất file
+    const prefix = option === "no_loss" ? "[KhongMatThanhTuu]_" : "[MatThanhTuu]_";
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(content);
+    downloadLink.download = prefix + file.name;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    showToast("Đã xử lý và tải file addon mới thành công!");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Có lỗi xảy ra trong quá trình xử lý!");
+  }
+}
+
 
 function handleImgUpload(e) {
   let file = e.target.files[0];
@@ -1071,19 +1244,17 @@ function deleteAddon(id, event) {
   }).catch(e => showToast(e.message));
 }
 
-// Logic tạo card động
 function createCard(item) {
   let card = document.createElement('div');
   card.className = 'addon-card';
   card.onclick = () => openDetail(item.id);
   
-  // Tính toán Badge MỚI (trong 3 ngày)
   let badges = '';
   let now = Date.now();
   if (item.createdAt && (now - item.createdAt < 3 * 24 * 60 * 60 * 1000)) {
     badges += `<span class="badge badge-new">MỚI</span>`;
   }
-  if (item.views >= 50) { // Giả sử > 50 view là HOT
+  if (item.views >= 50) {
     badges += `<span class="badge badge-hot">HOT</span>`;
   }
 
@@ -1118,7 +1289,6 @@ function renderHome() {
     let catItems = addons.filter(a => a.cat === catObj.name);
     if(catItems.length === 0) return;
     
-    // Sort
     catItems.sort((a, b) => {
       let orderA = a.order || 0, orderB = b.order || 0;
       if (orderA !== orderB) return orderB - orderA;
@@ -1132,7 +1302,6 @@ function renderHome() {
     let sliderContainer = document.createElement('div');
     sliderContainer.className = 'slider-container';
     
-    // Mũi tên Desktop
     let prevBtn = document.createElement('button'); prevBtn.className = 'slider-btn prev'; prevBtn.innerHTML = '<i data-lucide="chevron-left"></i>';
     let nextBtn = document.createElement('button'); nextBtn.className = 'slider-btn next'; nextBtn.innerHTML = '<i data-lucide="chevron-right"></i>';
     
@@ -1144,11 +1313,9 @@ function renderHome() {
     sliderContainer.appendChild(slider);
     sliderContainer.appendChild(nextBtn);
     
-    // Logic cuộn mũi tên
     prevBtn.onclick = () => slider.scrollBy({ left: -200, behavior: 'smooth' });
     nextBtn.onclick = () => slider.scrollBy({ left: 200, behavior: 'smooth' });
 
-    // Tính toán Dot động theo kích thước màn hình
     let cardWidth = window.innerWidth >= 768 ? 190 : (window.innerWidth >= 500 ? 170 : 150);
     let cardsPerView = Math.floor(sliderContainer.offsetWidth / (cardWidth + 16)) || 2;
     let totalDots = Math.ceil(catItems.length / cardsPerView);
@@ -1167,7 +1334,6 @@ function renderHome() {
         };
         dotsDiv.appendChild(dot);
       }
-      // Cập nhật dot khi cuộn tay trên mobile
       slider.addEventListener('scroll', () => {
         let scrollPos = slider.scrollLeft;
         let cw = slider.querySelector('.addon-card') ? slider.querySelector('.addon-card').offsetWidth + 16 : (cardWidth+16);
@@ -1273,7 +1439,6 @@ function switchTab(tabId, el) {
   document.getElementById(tabId).classList.add('active');
   el.classList.add('active');
   
-  // Di chuyển indicator
   let index = Array.from(el.parentNode.children).filter(c => c.classList.contains('nav-item')).indexOf(el);
   document.getElementById('navIndicator').style.transform = `translateX(${index * 100}%)`;
   
