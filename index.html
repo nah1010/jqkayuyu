@@ -709,6 +709,7 @@ header::before {
   background: none; border: none; color: var(--danger);
   cursor: pointer; padding: 6px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
   transition: background var(--dur-fast) var(--ease-ios), transform var(--dur-fast) var(--ease-spring);
 }
 .cat-manage-del:hover, .code-manage-del:hover { background: rgba(239, 68, 68, 0.1); }
@@ -719,6 +720,7 @@ header::before {
 .code-manage-value {
   font-family: monospace; font-size: 16px; font-weight: 700;
   letter-spacing: 1px; color: var(--primary);
+  word-break: break-all; flex: 1;
 }
 .code-manage-meta { font-size: 12px; color: var(--text-muted); }
 .code-manage-countdown {
@@ -1500,6 +1502,11 @@ header::before {
     </div>
     <div class="modal-body">
       <div class="form-group">
+        <label>Mã Code tùy chỉnh (để trống để tự tạo ngẫu nhiên)</label>
+        <input type="text" id="customCodeInput" placeholder="VD: TETNGUYENDAN2026, VIP-abc123..." maxlength="64">
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Có thể dùng chữ cái, số, hoặc ký tự bất kỳ. Mã sẽ được lưu chính xác như bạn gõ (phân biệt chữ hoa/thường).</p>
+      </div>
+      <div class="form-group">
         <label>Thời hạn Code *</label>
         <select id="codeDuration">
           <option value="3d">3 ngày</option>
@@ -1556,8 +1563,9 @@ header::before {
     </div>
     <div class="modal-body">
       <div class="form-group" style="margin-bottom:0;">
-        <label>Mã Code (chữ cái / số) *</label>
-        <input type="text" id="enterCodeInput" placeholder="Nhập mã code của bạn..." style="text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitEnterCode();}">
+        <label>Mã Code *</label>
+        <input type="text" id="enterCodeInput" placeholder="Nhập mã code của bạn..." onkeydown="if(event.key==='Enter'){event.preventDefault(); submitEnterCode();}">
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Mã code phân biệt chữ hoa/thường, vui lòng nhập chính xác như Admin đã cung cấp.</p>
         <p id="enterCodeErr" style="color:var(--danger); font-size:13px; font-weight:500; display:none; margin-top:8px;">
           <i data-lucide="alert-circle" style="width:14px; height:14px; vertical-align:middle;"></i> <span id="enterCodeErrMsg">Mã code không hợp lệ!</span>
         </p>
@@ -1997,9 +2005,15 @@ function toggleCustomDeviceLimit() {
 function submitGenerateCode() {
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
 
+  let customCodeRaw = document.getElementById('customCodeInput').value.trim();
   let durationKey = document.getElementById('codeDuration').value;
   let presetVal = document.getElementById('codeDeviceLimitPreset').value;
   let maxDevices = null;
+
+  if (customCodeRaw && activeCodes.some(c => c.code === customCodeRaw)) {
+    showToast("Mã code này đã tồn tại, vui lòng chọn mã khác!");
+    return;
+  }
 
   if (presetVal === 'custom') {
     let customVal = parseInt(document.getElementById('codeDeviceLimitCustom').value);
@@ -2014,7 +2028,7 @@ function submitGenerateCode() {
 
   let now = Date.now();
   let codeData = {
-    code: generateRandomCode(),
+    code: customCodeRaw || generateRandomCode(),
     createdAt: now,
     expiresAt: calcExpiresAt(durationKey, now),
     durationLabel: CODE_DURATION_LABELS[durationKey],
@@ -2024,6 +2038,7 @@ function submitGenerateCode() {
 
   db.collection("premiumCodes").add(codeData).then(() => {
     showToast("Đã tạo code Premium: " + codeData.code);
+    document.getElementById('customCodeInput').value = '';
   }).catch(e => {
     showToast(e.message);
   }).finally(() => { btn.disabled = false; });
@@ -2108,6 +2123,7 @@ function cleanupExpiredCodes() {
 
 function openPremiumManageModal() {
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  document.getElementById('customCodeInput').value = '';
   document.getElementById('codeDuration').value = '3d';
   document.getElementById('codeDeviceLimitPreset').value = 'unlimited';
   document.getElementById('codeDeviceLimitCustom').value = '';
@@ -2135,7 +2151,7 @@ function closeEnterCodeModal() {
 }
 
 function submitEnterCode() {
-  let inputVal = document.getElementById('enterCodeInput').value.trim().toUpperCase();
+  let inputVal = document.getElementById('enterCodeInput').value.trim();
   let errEl = document.getElementById('enterCodeErr');
   let errMsgEl = document.getElementById('enterCodeErrMsg');
   errEl.style.display = 'none';
