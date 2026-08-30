@@ -209,6 +209,44 @@ header::before {
 .theme-toggle:active { transform: scale(0.85) rotate(-25deg); }
 .theme-toggle i { transition: transform var(--dur-slow) var(--ease-spring); }
 
+.ad-banner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  animation: adBannerIn var(--dur-slow) var(--ease-snappy);
+}
+@keyframes adBannerIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ad-banner-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.ad-banner-frame {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-main);
+  transition: box-shadow var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring-soft);
+  line-height: 0;
+}
+.ad-banner-frame:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -704,17 +742,20 @@ header::before {
   </button>
 </header>
 
-<div id="adContainer" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 16px; background:var(--card-bg); border-bottom:1px solid var(--border);">
-  <script type="text/javascript">
-    atOptions = {
-      'key' : '38d9af66432b0fcaad005cac2062eab1',
-      'format' : 'iframe',
-      'height' : 50,
-      'width' : 320,
-      'params' : {}
-    };
-  </script>
-  <script type="text/javascript" src="https://www.highrevenueformat.com/38d9af66432b0fcaad005cac2062eab1/invoke.js"></script>
+<div id="adContainer" class="ad-banner-wrapper">
+  <span class="ad-banner-label">Quảng cáo</span>
+  <div class="ad-banner-frame" style="width:320px; height:50px;">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '38d9af66432b0fcaad005cac2062eab1',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="https://www.highrevenueformat.com/38d9af66432b0fcaad005cac2062eab1/invoke.js"></script>
+  </div>
 </div>
 
 <div class="main-content">
@@ -996,7 +1037,7 @@ header::before {
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeNewCatModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="submitNewCat()"><i data-lucide="check-circle"></i> Thêm</button>
+      <button class="btn btn-primary" id="submitNewCatBtn" onclick="submitNewCat()"><i data-lucide="check-circle"></i> Thêm</button>
     </div>
   </div>
 </div>
@@ -1155,17 +1196,10 @@ const DEFAULT_CATEGORIES = [
   { name: "Linh tinh🌚", icon: "box" }
 ];
 
-function getCustomCategories() {
-  try { return JSON.parse(localStorage.getItem('mc_custom_categories')) || []; }
-  catch(e) { return []; }
-}
-
-function saveCustomCategories(list) {
-  localStorage.setItem('mc_custom_categories', JSON.stringify(list));
-}
+let customCategories = [];
 
 function getAllCategories() {
-  return [...DEFAULT_CATEGORIES, ...getCustomCategories()];
+  return [...DEFAULT_CATEGORIES, ...customCategories];
 }
 
 function populateCatSelect() {
@@ -1194,15 +1228,15 @@ function submitNewCat() {
   let existing = getAllCategories().some(c => c.name.toLowerCase() === nameVal.toLowerCase());
   if (existing) { showToast("Thể loại này đã tồn tại!"); return; }
 
-  let custom = getCustomCategories();
-  custom.push({ name: nameVal, icon: "tag" });
-  saveCustomCategories(custom);
+  let btn = document.getElementById('submitNewCatBtn');
+  btn.disabled = true;
 
-  populateCatSelect();
-  document.getElementById('postCat').value = nameVal;
-
-  closeNewCatModal();
-  showToast("Đã thêm thể loại mới!");
+  db.collection("categories").add({ name: nameVal, icon: "tag", createdAt: Date.now() }).then(() => {
+    closeNewCatModal();
+    showToast("Đã thêm thể loại mới cho mọi người!");
+  }).catch(e => {
+    showToast(e.message);
+  }).finally(() => { btn.disabled = false; });
 }
 
 let addons = [];
@@ -1244,7 +1278,18 @@ window.onload = function() {
   if(!localStorage.getItem('welcome_hidden')) {
     document.getElementById('welcomeModal').classList.add('active');
   }
-  
+
+  db.collection("categories").orderBy("createdAt").onSnapshot((snapshot) => {
+    customCategories = [];
+    snapshot.forEach((doc) => {
+      customCategories.push({ id: doc.id, ...doc.data() });
+    });
+    populateCatSelect();
+    renderHome();
+  }, (error) => {
+    console.error(error);
+  });
+
   db.collection("addons").onSnapshot((snapshot) => {
     addons = [];
     snapshot.forEach((doc) => {
