@@ -521,7 +521,7 @@ header::before {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   color: var(--text-muted); font-size: 11px; font-weight: 500;
   cursor: pointer; background: none; border: none;
-  width: 25%; height: 100%; justify-content: center;
+  width: 20%; height: 100%; justify-content: center;
   position: relative; transition: color var(--dur-base) var(--ease-ios);
 }
 
@@ -541,10 +541,42 @@ header::before {
 .nav-item.active span { transform: translateY(-1px); }
 
 .nav-indicator {
-  position: absolute; top: 0; left: 0; height: 3px; width: 25%;
+  position: absolute; top: 0; left: 0; height: 3px; width: 20%;
   background: var(--primary);
   border-radius: 0 0 4px 4px;
   transition: transform var(--dur-slow) var(--ease-spring);
+}
+
+.nav-item.shop-nav .shop-nav-icon-wrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+}
+.nav-item.shop-nav .shop-nav-icon-wrap i {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 0 rgba(245,158,11,0));
+  transition: filter var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring), color var(--dur-base) var(--ease-ios);
+}
+.nav-item.shop-nav:not(.active) .shop-nav-icon-wrap i { animation: shopIconPulse 2.4s var(--ease-ios) infinite; }
+@keyframes shopIconPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.12) rotate(-6deg); }
+}
+.nav-item.shop-nav.active .shop-nav-icon-wrap i {
+  color: #eab308;
+  filter: drop-shadow(0 2px 6px rgba(234,179,8,0.55));
+  transform: translateY(-2px) scale(1.15);
+}
+.shop-nav-dot {
+  position: absolute; top: -2px; right: -3px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, #ff4b4b, #ff9000);
+  box-shadow: 0 0 0 2px var(--card-bg);
+  animation: shopDotPing 1.8s var(--ease-ios) infinite;
+}
+@keyframes shopDotPing {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.7; }
 }
 
 .floating-container {
@@ -764,6 +796,296 @@ header::before {
 @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 .skeleton-card { animation: pulse 1.4s var(--ease-ios) infinite; }
 
+/* ===== SHOP TAB ===== */
+.shop-banner {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e1b4b, #4c1d95 45%, #7c2d12 100%);
+  box-shadow: var(--shadow-lg);
+  animation: sectionIn var(--dur-slow) var(--ease-snappy);
+}
+.shop-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(250,204,21,0.35), transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(139,92,246,0.4), transparent 45%);
+  animation: shopBannerDrift 8s var(--ease-ios) infinite alternate;
+}
+@keyframes shopBannerDrift {
+  from { transform: translate(0,0) scale(1); }
+  to { transform: translate(-3%, 3%) scale(1.08); }
+}
+.shop-banner-content { position: relative; z-index: 1; }
+.shop-banner-title {
+  font-size: 20px; font-weight: 800; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px;
+}
+.shop-banner-title i { color: #facc15; filter: drop-shadow(0 0 6px rgba(250,204,21,0.6)); }
+.shop-banner-sub { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+.shop-banner-sparkle {
+  position: absolute; color: rgba(255,255,255,0.55);
+  animation: sparkleFloat 3s var(--ease-ios) infinite;
+}
+@keyframes sparkleFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-8px) rotate(20deg) scale(1.2); opacity: 1; }
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 14px;
+}
+@media (min-width: 500px) { .shop-grid { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); } }
+
+.shop-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 14px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-base) var(--ease-spring-soft), box-shadow var(--dur-base) var(--ease-ios), border-color var(--dur-base) var(--ease-ios);
+  animation: cardIn var(--dur-slow) var(--ease-snappy) backwards;
+}
+.shop-card:nth-child(1) { animation-delay: 0.03s; }
+.shop-card:nth-child(2) { animation-delay: 0.08s; }
+.shop-card:nth-child(3) { animation-delay: 0.13s; }
+.shop-card:nth-child(4) { animation-delay: 0.18s; }
+.shop-card:nth-child(5) { animation-delay: 0.23s; }
+.shop-card:nth-child(6) { animation-delay: 0.28s; }
+
+.shop-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: var(--shadow-primary); border-color: var(--primary); }
+.shop-card:active { transform: translateY(-2px) scale(0.97); transition-duration: var(--dur-fast); }
+
+.shop-card-icon-wrap {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
+  margin-bottom: 4px;
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.shop-card:hover .shop-card-icon-wrap { transform: scale(1.1) rotate(-6deg); }
+.shop-card-icon-wrap i { color: var(--primary); width: 26px; height: 26px; }
+
+.shop-card-duration { font-size: 14px; font-weight: 700; color: var(--text-main); }
+.shop-card-price { font-size: 17px; font-weight: 800; color: var(--primary); }
+.shop-card-buy {
+  margin-top: 6px; width: 100%;
+  padding: 8px 0; border-radius: 100px;
+  background: var(--primary); color: #fff;
+  font-size: 12.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: filter var(--dur-fast) var(--ease-ios), transform var(--dur-fast) var(--ease-spring);
+}
+.shop-card:hover .shop-card-buy { filter: brightness(1.08); }
+.shop-card:active .shop-card-buy { transform: scale(0.94); }
+
+/* Gói nổi bật nhất (trọn đời) */
+.shop-card.shop-card-best {
+  border-color: #eab308;
+  background: linear-gradient(160deg, var(--card-bg) 55%, rgba(234,179,8,0.08));
+  box-shadow: 0 8px 20px -6px rgba(234,179,8,0.35);
+}
+.shop-card.shop-card-best:hover { box-shadow: 0 14px 28px -6px rgba(234,179,8,0.5); border-color: #facc15; }
+.shop-card.shop-card-best .shop-card-icon-wrap {
+  background: linear-gradient(135deg, rgba(234,179,8,0.25), rgba(245,158,11,0.08));
+  animation: bestIconGlow 2.2s var(--ease-ios) infinite;
+}
+@keyframes bestIconGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234,179,8,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(234,179,8,0); }
+}
+.shop-card.shop-card-best .shop-card-icon-wrap i { color: #eab308; }
+.shop-card.shop-card-best .shop-card-price { color: #eab308; }
+.shop-card.shop-card-best .shop-card-buy { background: linear-gradient(135deg, #f59e0b, #eab308); }
+
+.shop-card-ribbon {
+  position: absolute; top: 10px; right: -28px;
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.4px;
+  padding: 3px 32px; transform: rotate(35deg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  animation: badgePop var(--dur-base) var(--ease-spring) backwards;
+  animation-delay: 0.2s;
+}
+
+.shop-card-shine {
+  position: absolute; top: 0; left: -60%;
+  width: 40%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: shopShine 3.2s ease-in-out infinite;
+}
+@keyframes shopShine {
+  0% { left: -60%; }
+  35%, 100% { left: 130%; }
+}
+
+/* ===== ĐẶC QUYỀN PREMIUM (trong Shop) ===== */
+.perks-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: var(--text-main);
+  margin: 4px 0 14px 0;
+}
+.perks-section-title i { color: #eab308; }
+
+.perks-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+@media (min-width: 560px) { .perks-grid { grid-template-columns: 1fr 1fr; } }
+
+.perk-item {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px; border-radius: var(--radius-md);
+  background: var(--card-bg); border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform var(--dur-base) var(--ease-spring-soft), border-color var(--dur-base) var(--ease-ios), box-shadow var(--dur-base) var(--ease-ios);
+  animation: cardIn var(--dur-slow) var(--ease-snappy) backwards;
+}
+.perk-item:nth-child(1) { animation-delay: 0.02s; }
+.perk-item:nth-child(2) { animation-delay: 0.06s; }
+.perk-item:nth-child(3) { animation-delay: 0.10s; }
+.perk-item:nth-child(4) { animation-delay: 0.14s; }
+.perk-item:nth-child(5) { animation-delay: 0.18s; }
+.perk-item:nth-child(6) { animation-delay: 0.22s; }
+.perk-item:hover { transform: translateY(-3px); border-color: #eab308; box-shadow: 0 8px 18px -8px rgba(234,179,8,0.35); }
+
+.perk-item-icon {
+  flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(234,179,8,0.18), rgba(245,158,11,0.06));
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.perk-item:hover .perk-item-icon { transform: scale(1.1) rotate(-8deg); }
+.perk-item-icon i { color: #eab308; width: 21px; height: 21px; }
+
+.perk-item-body { flex: 1; min-width: 0; }
+.perk-item-title {
+  font-size: 13.5px; font-weight: 700; color: var(--text-main);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 3px;
+}
+.perk-item-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.perk-live-tag {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px;
+  color: var(--primary);
+  background: rgba(16,185,129,0.12);
+  padding: 1px 6px; border-radius: 5px;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.perk-live-tag::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--primary);
+  animation: shopDotPing 1.6s var(--ease-ios) infinite;
+}
+
+.shop-note {
+  margin-top: 18px;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  background: var(--bg-main); border: 1px dashed var(--border);
+  font-size: 12.5px; color: var(--text-muted); line-height: 1.55;
+}
+.shop-note i { color: var(--secondary); flex-shrink: 0; margin-top: 1px; }
+
+/* ===== BADGE KHOÁ PREMIUM trên công cụ (tabTools) ===== */
+.tool-locked-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, #f59e0b, #eab308);
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+  padding: 2px 8px; border-radius: 100px;
+  box-shadow: 0 2px 5px rgba(234,179,8,0.35);
+  animation: badgePop var(--dur-base) var(--ease-spring) backwards;
+  animation-delay: 0.1s;
+}
+.tool-locked-badge i { width: 10px; height: 10px; }
+
+.popular-banner.tool-locked { position: relative; opacity: 0.88; }
+.popular-banner.tool-locked::after {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(234,179,8,0.04) 0 10px, transparent 10px 20px);
+  border-radius: inherit; pointer-events: none;
+}
+.tool-upgrade-link {
+  margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; color: #eab308;
+  cursor: pointer;
+  transition: gap var(--dur-fast) var(--ease-spring);
+}
+.popular-banner.tool-locked:hover .tool-upgrade-link { gap: 7px; }
+.tool-upgrade-link i { width: 13px; height: 13px; }
+
+/* Modal mã đơn hàng */
+.order-code-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 16px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.03));
+  border: 1.5px dashed var(--primary);
+  margin: 4px 0 14px 0;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-spring), background var(--dur-base) var(--ease-ios);
+  animation: orderCodePop var(--dur-slow) var(--ease-spring) backwards;
+}
+.order-code-box:active { transform: scale(0.97); }
+@keyframes orderCodePop {
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.order-code-text {
+  font-family: monospace; font-size: 20px; font-weight: 800;
+  letter-spacing: 2px; color: var(--primary);
+  word-break: break-all;
+}
+.order-code-copy-hint {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  font-size: 11px; font-weight: 600; color: var(--primary);
+}
+.order-code-copy-hint i { width: 15px; height: 15px; transition: transform var(--dur-base) var(--ease-spring); }
+
+.order-phone-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  background: var(--bg-main); border: 1px solid var(--border);
+  cursor: pointer; margin-bottom: 14px;
+  transition: transform var(--dur-fast) var(--ease-spring), border-color var(--dur-base) var(--ease-ios);
+}
+.order-phone-row:active { transform: scale(0.97); }
+.order-phone-row:hover { border-color: #0068ff; }
+.order-phone-row i { color: #0068ff; flex-shrink: 0; }
+.order-phone-number { font-size: 16px; font-weight: 700; color: var(--text-main); flex: 1; }
+.order-phone-copy-hint { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+.order-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; font-size: 13.5px;
+  border-bottom: 1px solid var(--border);
+}
+.order-summary-row:last-of-type { border-bottom: none; }
+.order-summary-row span:first-child { color: var(--text-muted); }
+.order-summary-row span:last-child { font-weight: 700; color: var(--text-main); }
+
+@keyframes copyFlash {
+  0% { background-color: rgba(16,185,129,0.25); }
+  100% { background-color: transparent; }
+}
+.copy-flash { animation: copyFlash 0.6s var(--ease-ios); }
+
 </style>
 </head>
 <body>
@@ -820,6 +1142,71 @@ header::before {
     <div id="popularContent"></div>
   </div>
 
+  <div id="tabShop" class="tab-pane">
+    <div class="shop-banner">
+      <i data-lucide="sparkle" class="shop-banner-sparkle" style="width:16px; top:14px; right:60px; animation-delay:0s;"></i>
+      <i data-lucide="sparkle" class="shop-banner-sparkle" style="width:11px; top:40px; right:24px; animation-delay:0.6s;"></i>
+      <i data-lucide="sparkle" class="shop-banner-sparkle" style="width:13px; bottom:16px; right:90px; animation-delay:1.2s;"></i>
+      <div class="shop-banner-content">
+        <div class="shop-banner-title"><i data-lucide="gem"></i> SHOP PREMIUM</div>
+        <div class="shop-banner-sub">Nâng cấp tài khoản để trải nghiệm không quảng cáo, mở khoá đầy đủ công cụ và mọi đặc quyền dành riêng cho thành viên Premium!</div>
+      </div>
+    </div>
+
+    <div class="shop-grid" id="shopGrid"></div>
+
+    <div class="perks-section-title"><i data-lucide="badge-check"></i> Đặc Quyền Thành Viên Premium</div>
+    <div class="perks-grid">
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="eye-off"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Trải nghiệm không quảng cáo <span class="perk-live-tag">Đang hoạt động</span></div>
+          <div class="perk-item-desc">Ẩn toàn bộ banner và popup quảng cáo trên web, duyệt addon mượt mà, không gián đoạn.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="languages"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Việt hoá addon tự động <span class="perk-live-tag">Đang hoạt động</span></div>
+          <div class="perk-item-desc">Mở khoá công cụ tự động quét và dịch Behavior Pack sang tiếng Việt chỉ với 1 lần bấm.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="edit-3"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Chỉnh sửa thông tin Addon <span class="perk-live-tag">Đang hoạt động</span></div>
+          <div class="perk-item-desc">Tự do đổi tên, viết lại mô tả và thay icon riêng cho addon bạn tải về.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="crown"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Huy hiệu Premium độc quyền</div>
+          <div class="perk-item-desc">Hiển thị huy hiệu vương miện ngay trên thanh tìm kiếm, khẳng định đẳng cấp thành viên.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="headset"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Ưu tiên hỗ trợ</div>
+          <div class="perk-item-desc">Được ưu tiên phản hồi khi cần hỗ trợ hoặc báo lỗi addon qua Discord/Zalo.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-item-icon"><i data-lucide="sparkles"></i></div>
+        <div class="perk-item-body">
+          <div class="perk-item-title">Đặc quyền mới trong tương lai</div>
+          <div class="perk-item-desc">Tự động nhận thêm mọi tính năng và công cụ độc quyền mà Admin phát triển sau này.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shop-note">
+      <i data-lucide="info" style="width:16px; height:16px;"></i>
+      <span>Sau khi bấm mua, hệ thống sẽ tạo cho bạn một mã đơn hàng ngẫu nhiên. Hãy gửi mã này cho Admin qua số điện thoại được cung cấp để được kích hoạt Premium nhé!</span>
+    </div>
+  </div>
+
   <div id="tabDownloaded" class="tab-pane">
     <div class="category-title">
       <i data-lucide="download-cloud"></i>
@@ -844,23 +1231,27 @@ header::before {
     </div>
 
     <div id="translateToolBanner" class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openTranslateModal()">
-      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px;">
+      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <i data-lucide="languages" style="color: var(--danger);"></i>
         Việt hoá addon BETA ( Tự động )
+        <span id="translateLockBadge" class="tool-locked-badge" style="display:none;"><i data-lucide="lock"></i> Premium</span>
       </div>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
         Tự động quét và dịch các ngôn ngữ tiếng Anh trong file Behavior Pack sang tiếng Việt!
       </p>
+      <a id="translateUpgradeLink" class="tool-upgrade-link" style="display:none;" onclick="event.stopPropagation(); goToShopFromTools();"><i data-lucide="arrow-up-circle"></i> Nâng cấp Premium để mở khoá</a>
     </div>
 
     <div id="editAddonToolBanner" class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openEditAddonModal()">
-      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px;">
+      <div style="font-weight: 700; font-size: 15px; color: var(--danger); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <i data-lucide="edit-3" style="color: var(--danger);"></i>
         Chỉnh sửa thông tin Addon (Tên, Mô tả, Ảnh)
+        <span id="editAddonLockBadge" class="tool-locked-badge" style="display:none;"><i data-lucide="lock"></i> Premium</span>
       </div>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
         Cá nhân hóa addon của bạn bằng cách đổi tên, viết lại mô tả và thiết lập icon mới dễ dàng!
       </p>
+      <a id="editAddonUpgradeLink" class="tool-upgrade-link" style="display:none;" onclick="event.stopPropagation(); goToShopFromTools();"><i data-lucide="arrow-up-circle"></i> Nâng cấp Premium để mở khoá</a>
     </div>
 
   </div>
@@ -890,6 +1281,13 @@ header::before {
   <button class="nav-item" onclick="switchTab('tabPopular', this)">
     <img src="2.png" alt="HOT" class="nav-img-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/7659/7659779.png'">
     <span>Nổi tiếng</span>
+  </button>
+  <button class="nav-item shop-nav" onclick="switchTab('tabShop', this)">
+    <span class="shop-nav-icon-wrap">
+      <i data-lucide="gem"></i>
+      <span class="shop-nav-dot"></span>
+    </span>
+    <span>Shop</span>
   </button>
   <button class="nav-item" onclick="switchTab('tabDownloaded', this)">
     <i data-lucide="download"></i>
@@ -1158,8 +1556,8 @@ header::before {
     </div>
     <div class="modal-body">
       <div class="form-group" style="margin-bottom:0;">
-        <label>Mã Code (tối thiểu 8 chữ số) *</label>
-        <input type="text" inputmode="numeric" id="enterCodeInput" placeholder="Nhập mã code của bạn..." onkeydown="if(event.key==='Enter'){event.preventDefault(); submitEnterCode();}">
+        <label>Mã Code (chữ cái / số) *</label>
+        <input type="text" id="enterCodeInput" placeholder="Nhập mã code của bạn..." style="text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitEnterCode();}">
         <p id="enterCodeErr" style="color:var(--danger); font-size:13px; font-weight:500; display:none; margin-top:8px;">
           <i data-lucide="alert-circle" style="width:14px; height:14px; vertical-align:middle;"></i> <span id="enterCodeErrMsg">Mã code không hợp lệ!</span>
         </p>
@@ -1168,6 +1566,50 @@ header::before {
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeEnterCodeModal()">Hủy</button>
       <button class="btn btn-primary" id="submitEnterCodeBtn" onclick="submitEnterCode()"><i data-lucide="check-circle"></i> Kích hoạt</button>
+    </div>
+  </div>
+</div>
+
+<div id="shopOrderModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="shopping-bag" style="color:#eab308;"></i> Xác Nhận Mua Premium</span>
+      <button class="close-x" onclick="closeShopOrderModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="order-summary-row">
+        <span>Gói bạn chọn</span>
+        <span id="shopOrderPackageLabel">-</span>
+      </div>
+      <div class="order-summary-row" style="margin-bottom:16px;">
+        <span>Giá tiền</span>
+        <span id="shopOrderPriceLabel">-</span>
+      </div>
+
+      <p style="font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+        <i data-lucide="megaphone" style="width:15px; height:15px; color:var(--secondary);"></i>
+        Bạn hãy gửi dòng mã này cho admin nhé <span style="font-size:15px;">:D</span>
+      </p>
+
+      <div class="order-code-box" id="shopOrderCodeBox" onclick="copyOrderCode()" title="Bấm để sao chép mã">
+        <span class="order-code-text" id="shopOrderCodeText">------------</span>
+        <span class="order-code-copy-hint"><i data-lucide="copy"></i> Sao chép</span>
+      </div>
+
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Số điện thoại admin ( bấm để sao chép ):</p>
+      <div class="order-phone-row" id="shopOrderPhoneRow" onclick="copyPhoneNumber()" title="Bấm để sao chép số điện thoại">
+        <i data-lucide="phone-call"></i>
+        <span class="order-phone-number">0368622960</span>
+        <span class="order-phone-copy-hint"><i data-lucide="copy" style="width:13px; height:13px; vertical-align:middle;"></i></span>
+      </div>
+
+      <p style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+        <i data-lucide="clock" style="width:12px; height:12px; vertical-align:middle;"></i>
+        Mã đơn hàng đã được tự động sao chép. Sau khi admin xác nhận, bạn sẽ nhận được code Premium riêng để kích hoạt.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeShopOrderModal()">Đóng</button>
     </div>
   </div>
 </div>
@@ -1446,9 +1888,105 @@ function calcExpiresAt(durationKey, fromTime) {
 }
 
 function generateRandomCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
-  for (let i = 0; i < 8; i++) code += Math.floor(Math.random() * 10);
+  for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
   return code;
+}
+
+function generateOrderCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 12; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+}
+
+const SHOP_PACKAGES = [
+  { id: 'w1',  label: '1 Tuần',   price: '7.000đ',   priceRaw: 7000,   icon: 'zap' },
+  { id: 'm1',  label: '1 Tháng',  price: '20.000đ',  priceRaw: 20000,  icon: 'star' },
+  { id: 'm3',  label: '3 Tháng',  price: '40.000đ',  priceRaw: 40000,  icon: 'flame' },
+  { id: 'm6',  label: '6 Tháng',  price: '70.000đ',  priceRaw: 70000,  icon: 'shield-check', ribbon: 'PHỔ BIẾN' },
+  { id: 'm12', label: '12 Tháng', price: '100.000đ', priceRaw: 100000, icon: 'trophy' },
+  { id: 'lt',  label: 'Trọn Đời', price: '200.000đ', priceRaw: 200000, icon: 'crown', best: true, ribbon: 'TỐT NHẤT' }
+];
+
+function renderShopGrid() {
+  let grid = document.getElementById('shopGrid');
+  if (!grid) return;
+  grid.innerHTML = SHOP_PACKAGES.map(p => `
+    <div class="shop-card ${p.best ? 'shop-card-best' : ''}" onclick="buyShopPackage('${p.id}')">
+      ${p.best ? '<div class="shop-card-shine"></div>' : ''}
+      ${p.ribbon ? `<div class="shop-card-ribbon">${p.ribbon}</div>` : ''}
+      <div class="shop-card-icon-wrap"><i data-lucide="${p.icon}"></i></div>
+      <div class="shop-card-duration">${p.label}</div>
+      <div class="shop-card-price">${p.price}</div>
+      <div class="shop-card-buy"><i data-lucide="shopping-cart" style="width:14px; height:14px;"></i> Mua ngay</div>
+    </div>
+  `).join('');
+  lucide.createIcons({ root: grid });
+}
+
+let currentOrderCode = "";
+
+function buyShopPackage(packageId) {
+  let pkg = SHOP_PACKAGES.find(p => p.id === packageId);
+  if (!pkg) return;
+
+  currentOrderCode = generateOrderCode();
+
+  document.getElementById('shopOrderPackageLabel').innerText = pkg.label + ' Premium';
+  document.getElementById('shopOrderPriceLabel').innerText = pkg.price;
+  document.getElementById('shopOrderCodeText').innerText = currentOrderCode;
+
+  document.getElementById('shopOrderModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('shopOrderModal') });
+
+  copyTextToClipboard(currentOrderCode, false);
+  showToast("Đã tạo mã đơn hàng & tự động sao chép!");
+}
+
+function closeShopOrderModal() {
+  document.getElementById('shopOrderModal').classList.remove('active');
+}
+
+function copyTextToClipboard(text, showFeedback) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      if (showFeedback) showToast("Đã sao chép: " + text);
+    }).catch(() => fallbackCopyText(text, showFeedback));
+  } else {
+    fallbackCopyText(text, showFeedback);
+  }
+}
+
+function fallbackCopyText(text, showFeedback) {
+  let ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  if (showFeedback) showToast("Đã sao chép: " + text);
+}
+
+function flashElement(el) {
+  if (!el) return;
+  el.classList.remove('copy-flash');
+  void el.offsetWidth;
+  el.classList.add('copy-flash');
+}
+
+function copyOrderCode() {
+  if (!currentOrderCode) return;
+  copyTextToClipboard(currentOrderCode, true);
+  flashElement(document.getElementById('shopOrderCodeBox'));
+}
+
+function copyPhoneNumber() {
+  copyTextToClipboard('0368622960', true);
+  flashElement(document.getElementById('shopOrderPhoneRow'));
 }
 
 function toggleCustomDeviceLimit() {
@@ -1597,7 +2135,7 @@ function closeEnterCodeModal() {
 }
 
 function submitEnterCode() {
-  let inputVal = document.getElementById('enterCodeInput').value.trim();
+  let inputVal = document.getElementById('enterCodeInput').value.trim().toUpperCase();
   let errEl = document.getElementById('enterCodeErr');
   let errMsgEl = document.getElementById('enterCodeErrMsg');
   errEl.style.display = 'none';
@@ -1695,6 +2233,23 @@ function revokePremium() {
 
 let popunderAdLoaded = false;
 
+function updateToolLockUI(bannerId, badgeId, linkId, hasAccess) {
+  const banner = document.getElementById(bannerId);
+  const badge = document.getElementById(badgeId);
+  const link = document.getElementById(linkId);
+  if (!banner || !badge || !link) return;
+
+  banner.classList.toggle('tool-locked', !hasAccess);
+  badge.style.display = hasAccess ? 'none' : 'inline-flex';
+  link.style.display = hasAccess ? 'none' : 'inline-flex';
+  if (!hasAccess) lucide.createIcons({ root: banner });
+}
+
+function goToShopFromTools() {
+  const shopNavBtn = document.querySelector('.nav-item.shop-nav');
+  if (shopNavBtn) switchTab('tabShop', shopNavBtn);
+}
+
 function updateAdAndAccessUI() {
   const adContainer = document.getElementById('adContainer');
   const shouldHideAds = isAdmin || isPremium;
@@ -1705,6 +2260,10 @@ function updateAdAndAccessUI() {
     premiumBadge.style.display = (isPremium && !isAdmin) ? 'inline-flex' : 'none';
     lucide.createIcons({ root: premiumBadge });
   }
+
+  const hasAccess = isAdmin || isPremium;
+  updateToolLockUI('translateToolBanner', 'translateLockBadge', 'translateUpgradeLink', hasAccess);
+  updateToolLockUI('editAddonToolBanner', 'editAddonLockBadge', 'editAddonUpgradeLink', hasAccess);
 
   if (!shouldHideAds && !popunderAdLoaded) {
     const popunderScript1 = document.createElement('script');
@@ -1746,6 +2305,7 @@ window.onload = function() {
   }
 
   initPremiumFromStorage();
+  renderShopGrid();
 
   db.collection("categories").orderBy("createdAt").onSnapshot((snapshot) => {
     customCategories = [];
