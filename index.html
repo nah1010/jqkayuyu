@@ -665,6 +665,47 @@ header::before {
 }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
+.cat-manage-item, .code-manage-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--bg-main); border: 1px solid var(--border);
+  margin-bottom: 8px;
+  animation: sectionIn var(--dur-base) var(--ease-snappy);
+}
+.cat-manage-item span, .code-manage-info { flex: 1; font-size: 14px; font-weight: 500; }
+.cat-manage-del, .code-manage-del {
+  background: none; border: none; color: var(--danger);
+  cursor: pointer; padding: 6px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--dur-fast) var(--ease-ios), transform var(--dur-fast) var(--ease-spring);
+}
+.cat-manage-del:hover, .code-manage-del:hover { background: rgba(239, 68, 68, 0.1); }
+.cat-manage-del:active, .code-manage-del:active { transform: scale(0.85); }
+
+.code-manage-item { flex-direction: column; align-items: stretch; gap: 6px; }
+.code-manage-item .code-manage-row { display: flex; align-items: center; gap: 10px; }
+.code-manage-value {
+  font-family: monospace; font-size: 16px; font-weight: 700;
+  letter-spacing: 1px; color: var(--primary);
+}
+.code-manage-meta { font-size: 12px; color: var(--text-muted); }
+.code-manage-countdown {
+  font-size: 12px; font-weight: 600; color: var(--warning);
+  display: flex; align-items: center; gap: 4px;
+}
+.code-manage-countdown.expiring { color: var(--danger); }
+
+.premium-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, #f59e0b, #eab308);
+  color: white; font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 100px;
+  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
+}
+
+.floating-btn.premium-manage-btn { background-color: #8b5cf6; }
+.floating-btn.premium-enter-btn { background-color: #eab308; }
+
 .crop-editor-container {
   display: none; margin-top: 12px; padding: 12px;
   border: 2px dashed var(--border); border-radius: 8px;
@@ -737,6 +778,7 @@ header::before {
     <input type="text" id="searchInput" placeholder="Tìm kiếm addon..." oninput="toggleClearBtn()" onkeyup="handleSearch(event)">
     <i data-lucide="x" class="clear-search" id="clearSearchBtn" onclick="clearSearch()"></i>
   </div>
+  <span id="premiumBadge" class="premium-badge" style="display:none;"><i data-lucide="crown" style="width:12px; height:12px;"></i> Premium</span>
   <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">
     <i data-lucide="moon"></i>
   </button>
@@ -827,6 +869,9 @@ header::before {
 <div class="floating-container">
   <button id="adminBtn" class="floating-btn" style="display:none; animation-delay: 0.1s;" onclick="openPostModal()" title="Đăng Addon mới">
     <i data-lucide="plus"></i>
+  </button>
+  <button id="premiumManageBtn" class="floating-btn premium-manage-btn" style="display:none; animation-delay: 0.15s;" onclick="openPremiumManageModal()" title="Quản lý Code Premium">
+    <i data-lucide="key-round"></i>
   </button>
   <button id="logoutBtn" class="floating-btn logout-btn" style="display:none; animation-delay: 0.2s;" onclick="logoutAdmin()" title="Đăng xuất">
     <i data-lucide="log-out"></i>
@@ -1024,20 +1069,105 @@ header::before {
 </div>
 
 <div id="newCatModal" class="modal-overlay">
-  <div class="modal-box" style="max-width:380px;">
+  <div class="modal-box" style="max-width:420px;">
     <div class="modal-header">
-      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="tag" style="color:var(--primary);"></i> Thêm Thể Loại Mới</span>
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="tag" style="color:var(--primary);"></i> Quản Lý Thể Loại</span>
       <button class="close-x" onclick="closeNewCatModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label>Thêm thể loại mới *</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="newCatName" placeholder="Ví dụ: Vehicle, Skin..." maxlength="20" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitNewCat();}">
+          <button type="button" class="btn btn-primary" id="submitNewCatBtn" style="padding:0 16px;" onclick="submitNewCat()"><i data-lucide="plus"></i></button>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">5 thể loại mặc định (Hỗ trợ sinh tồn, Giải trí, Shader, Map, Linh tinh) không thể xóa.</p>
+      </div>
       <div class="form-group" style="margin-bottom:0;">
-        <label>Tên thể loại *</label>
-        <input type="text" id="newCatName" placeholder="Ví dụ: Vehicle, Skin..." maxlength="20" onkeydown="if(event.key==='Enter'){event.preventDefault(); submitNewCat();}">
+        <label>Thể loại tự tạo (có thể xóa)</label>
+        <div id="customCatList"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeNewCatModal()">Hủy</button>
-      <button class="btn btn-primary" id="submitNewCatBtn" onclick="submitNewCat()"><i data-lucide="check-circle"></i> Thêm</button>
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeNewCatModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="premiumManageModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="key-round" style="color:#8b5cf6;"></i> Quản Lý Code Premium</span>
+      <button class="close-x" onclick="closePremiumManageModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Thời hạn Code *</label>
+        <select id="codeDuration">
+          <option value="3d">3 ngày</option>
+          <option value="7d">7 ngày</option>
+          <option value="1m">1 tháng</option>
+          <option value="2m">2 tháng</option>
+          <option value="3m">3 tháng</option>
+          <option value="4m">4 tháng</option>
+          <option value="5m">5 tháng</option>
+          <option value="6m">6 tháng</option>
+          <option value="7m">7 tháng</option>
+          <option value="8m">8 tháng</option>
+          <option value="9m">9 tháng</option>
+          <option value="10m">10 tháng</option>
+          <option value="11m">11 tháng</option>
+          <option value="12m">12 tháng</option>
+          <option value="1y">1 năm</option>
+          <option value="2y">2 năm</option>
+          <option value="lifetime">Trọn đời</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Giới hạn số máy sử dụng *</label>
+        <select id="codeDeviceLimitPreset" onchange="toggleCustomDeviceLimit()">
+          <option value="unlimited">Không giới hạn</option>
+          <option value="1">1 người</option>
+          <option value="5">5 người</option>
+          <option value="10">10 người</option>
+          <option value="20">20 người</option>
+          <option value="50">50 người</option>
+          <option value="100">100 người</option>
+          <option value="custom">Tùy chỉnh...</option>
+        </select>
+        <input type="number" id="codeDeviceLimitCustom" min="1" placeholder="Nhập số người tùy ý..." style="display:none; margin-top:8px;">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" id="generateCodeBtn" onclick="submitGenerateCode()"><i data-lucide="sparkles"></i> Tạo Code Mới</button>
+
+      <div style="margin-top:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color:var(--text-main);">Code đang hoạt động</label>
+        <div id="activeCodesList"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closePremiumManageModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="enterCodeModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="crown" style="color:#eab308;"></i> Nhập Code Premium</span>
+      <button class="close-x" onclick="closeEnterCodeModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Mã Code (tối thiểu 8 chữ số) *</label>
+        <input type="text" inputmode="numeric" id="enterCodeInput" placeholder="Nhập mã code của bạn..." onkeydown="if(event.key==='Enter'){event.preventDefault(); submitEnterCode();}">
+        <p id="enterCodeErr" style="color:var(--danger); font-size:13px; font-weight:500; display:none; margin-top:8px;">
+          <i data-lucide="alert-circle" style="width:14px; height:14px; vertical-align:middle;"></i> <span id="enterCodeErrMsg">Mã code không hợp lệ!</span>
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEnterCodeModal()">Hủy</button>
+      <button class="btn btn-primary" id="submitEnterCodeBtn" onclick="submitEnterCode()"><i data-lucide="check-circle"></i> Kích hoạt</button>
     </div>
   </div>
 </div>
@@ -1212,12 +1342,44 @@ function populateCatSelect() {
 }
 
 function openNewCatModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   document.getElementById('newCatName').value = "";
+  renderCustomCatList();
   document.getElementById('newCatModal').classList.add('active');
 }
 
 function closeNewCatModal() {
   document.getElementById('newCatModal').classList.remove('active');
+}
+
+function renderCustomCatList() {
+  let container = document.getElementById('customCatList');
+  if (customCategories.length === 0) {
+    container.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">Chưa có thể loại tự tạo nào.</p>';
+    return;
+  }
+  container.innerHTML = customCategories.map(c => `
+    <div class="cat-manage-item">
+      <span>${c.name}</span>
+      <button class="cat-manage-del" onclick="deleteCategory('${c.id}')" title="Xóa thể loại"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+    </div>
+  `).join('');
+  lucide.createIcons({ root: container });
+}
+
+function deleteCategory(id) {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  let catItem = customCategories.find(c => c.id === id);
+  if (!catItem) return;
+  let inUse = addons.some(a => a.cat === catItem.name);
+  if (inUse) {
+    if (!confirm(`Thể loại "${catItem.name}" đang có addon sử dụng. Các addon này sẽ không hiển thị theo thể loại nào nữa. Vẫn xóa?`)) return;
+  } else {
+    if (!confirm(`Xóa thể loại "${catItem.name}"?`)) return;
+  }
+  db.collection("categories").doc(id).delete().then(() => {
+    showToast("Đã xóa thể loại!");
+  }).catch(e => showToast(e.message));
 }
 
 function submitNewCat() {
@@ -1232,7 +1394,7 @@ function submitNewCat() {
   btn.disabled = true;
 
   db.collection("categories").add({ name: nameVal, icon: "tag", createdAt: Date.now() }).then(() => {
-    closeNewCatModal();
+    document.getElementById('newCatName').value = "";
     showToast("Đã thêm thể loại mới cho mọi người!");
   }).catch(e => {
     showToast(e.message);
@@ -1248,18 +1410,303 @@ let editCropper = null;
 let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
+let isPremium = false;
+let activeCodes = [];
+let codeCountdownInterval = null;
+let expiredCodeCleanupInterval = null;
+
+function getDeviceId() {
+  let id = localStorage.getItem('mc_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 12);
+    localStorage.setItem('mc_device_id', id);
+  }
+  return id;
+}
+
+const CODE_DURATION_LABELS = {
+  '3d': '3 ngày', '7d': '7 ngày',
+  '1m': '1 tháng', '2m': '2 tháng', '3m': '3 tháng', '4m': '4 tháng',
+  '5m': '5 tháng', '6m': '6 tháng', '7m': '7 tháng', '8m': '8 tháng',
+  '9m': '9 tháng', '10m': '10 tháng', '11m': '11 tháng', '12m': '12 tháng',
+  '1y': '1 năm', '2y': '2 năm', 'lifetime': 'Trọn đời'
+};
+
+function calcExpiresAt(durationKey, fromTime) {
+  if (durationKey === 'lifetime') return null;
+  let d = new Date(fromTime);
+  if (durationKey.endsWith('d')) {
+    d.setDate(d.getDate() + parseInt(durationKey));
+  } else if (durationKey.endsWith('m')) {
+    d.setMonth(d.getMonth() + parseInt(durationKey));
+  } else if (durationKey.endsWith('y')) {
+    d.setFullYear(d.getFullYear() + parseInt(durationKey));
+  }
+  return d.getTime();
+}
+
+function generateRandomCode() {
+  let code = "";
+  for (let i = 0; i < 8; i++) code += Math.floor(Math.random() * 10);
+  return code;
+}
+
+function toggleCustomDeviceLimit() {
+  let preset = document.getElementById('codeDeviceLimitPreset').value;
+  document.getElementById('codeDeviceLimitCustom').style.display = preset === 'custom' ? 'block' : 'none';
+}
+
+function submitGenerateCode() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+
+  let durationKey = document.getElementById('codeDuration').value;
+  let presetVal = document.getElementById('codeDeviceLimitPreset').value;
+  let maxDevices = null;
+
+  if (presetVal === 'custom') {
+    let customVal = parseInt(document.getElementById('codeDeviceLimitCustom').value);
+    if (!customVal || customVal < 1) { showToast("Vui lòng nhập số người hợp lệ!"); return; }
+    maxDevices = customVal;
+  } else if (presetVal !== 'unlimited') {
+    maxDevices = parseInt(presetVal);
+  }
+
+  let btn = document.getElementById('generateCodeBtn');
+  btn.disabled = true;
+
+  let now = Date.now();
+  let codeData = {
+    code: generateRandomCode(),
+    createdAt: now,
+    expiresAt: calcExpiresAt(durationKey, now),
+    durationLabel: CODE_DURATION_LABELS[durationKey],
+    maxDevices: maxDevices,
+    usedByDevices: []
+  };
+
+  db.collection("premiumCodes").add(codeData).then(() => {
+    showToast("Đã tạo code Premium: " + codeData.code);
+  }).catch(e => {
+    showToast(e.message);
+  }).finally(() => { btn.disabled = false; });
+}
+
+function formatCountdown(ms) {
+  if (ms <= 0) return "Đã hết hạn";
+  let totalSeconds = Math.floor(ms / 1000);
+  let days = Math.floor(totalSeconds / 86400);
+  let hours = Math.floor((totalSeconds % 86400) / 3600);
+  let minutes = Math.floor((totalSeconds % 3600) / 60);
+  let seconds = totalSeconds % 60;
+  if (days > 0) return `${days} ngày ${hours} giờ`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+function renderActiveCodesList() {
+  let container = document.getElementById('activeCodesList');
+  if (activeCodes.length === 0) {
+    container.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">Chưa có code Premium nào.</p>';
+    return;
+  }
+  container.innerHTML = activeCodes.map(c => {
+    let usedCount = (c.usedByDevices || []).length;
+    let limitText = c.maxDevices ? `${usedCount}/${c.maxDevices} máy` : `${usedCount} máy (không giới hạn)`;
+    let countdownHtml = c.expiresAt
+      ? `<span class="code-manage-countdown" data-expires="${c.expiresAt}"><i data-lucide="clock" style="width:12px; height:12px;"></i> <span class="countdown-text">${formatCountdown(c.expiresAt - Date.now())}</span></span>`
+      : `<span class="code-manage-countdown" style="color:var(--primary);"><i data-lucide="infinity" style="width:12px; height:12px;"></i> Trọn đời</span>`;
+    return `
+      <div class="code-manage-item">
+        <div class="code-manage-row">
+          <span class="code-manage-value">${c.code}</span>
+          <button class="code-manage-del" onclick="deleteCode('${c.id}')" title="Xóa code"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+        </div>
+        <div class="code-manage-row" style="justify-content:space-between;">
+          <span class="code-manage-meta">${c.durationLabel} • ${limitText}</span>
+          ${countdownHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+  lucide.createIcons({ root: container });
+  startCodeCountdownTicker();
+}
+
+function startCodeCountdownTicker() {
+  if (codeCountdownInterval) clearInterval(codeCountdownInterval);
+  codeCountdownInterval = setInterval(() => {
+    let modal = document.getElementById('premiumManageModal');
+    if (!modal.classList.contains('active')) {
+      clearInterval(codeCountdownInterval);
+      codeCountdownInterval = null;
+      return;
+    }
+    document.querySelectorAll('.code-manage-countdown[data-expires]').forEach(el => {
+      let expiresAt = parseInt(el.getAttribute('data-expires'));
+      let remaining = expiresAt - Date.now();
+      let textEl = el.querySelector('.countdown-text');
+      if (textEl) textEl.innerText = formatCountdown(remaining);
+      if (remaining <= 60000) el.classList.add('expiring');
+    });
+  }, 1000);
+}
+
+function deleteCode(id) {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  if (!confirm("Xóa code này? Các máy đã kích hoạt Premium bằng code này sẽ bị thu hồi Premium ngay khi tải lại trang.")) return;
+  db.collection("premiumCodes").doc(id).delete().then(() => {
+    showToast("Đã xóa code!");
+  }).catch(e => showToast(e.message));
+}
+
+function cleanupExpiredCodes() {
+  let now = Date.now();
+  activeCodes.forEach(c => {
+    if (c.expiresAt && c.expiresAt < now) {
+      db.collection("premiumCodes").doc(c.id).delete().catch(() => {});
+    }
+  });
+}
+
+function openPremiumManageModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  document.getElementById('codeDuration').value = '3d';
+  document.getElementById('codeDeviceLimitPreset').value = 'unlimited';
+  document.getElementById('codeDeviceLimitCustom').value = '';
+  document.getElementById('codeDeviceLimitCustom').style.display = 'none';
+  renderActiveCodesList();
+  document.getElementById('premiumManageModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('premiumManageModal') });
+}
+
+function closePremiumManageModal() {
+  document.getElementById('premiumManageModal').classList.remove('active');
+  if (codeCountdownInterval) { clearInterval(codeCountdownInterval); codeCountdownInterval = null; }
+}
+
+function openEnterCodeModal() {
+  document.getElementById('enterCodeInput').value = '';
+  document.getElementById('enterCodeErr').style.display = 'none';
+  document.getElementById('enterCodeModal').classList.add('active');
+  document.getElementById('searchInput').value = '';
+  toggleClearBtn();
+}
+
+function closeEnterCodeModal() {
+  document.getElementById('enterCodeModal').classList.remove('active');
+}
+
+function submitEnterCode() {
+  let inputVal = document.getElementById('enterCodeInput').value.trim();
+  let errEl = document.getElementById('enterCodeErr');
+  let errMsgEl = document.getElementById('enterCodeErrMsg');
+  errEl.style.display = 'none';
+
+  if (!inputVal) {
+    errMsgEl.innerText = "Vui lòng nhập mã code!";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  let matched = activeCodes.find(c => c.code === inputVal);
+  if (!matched) {
+    errMsgEl.innerText = "Mã code không tồn tại hoặc đã hết hạn!";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (matched.expiresAt && matched.expiresAt < Date.now()) {
+    errMsgEl.innerText = "Mã code này đã hết hạn!";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  let deviceId = getDeviceId();
+  let usedDevices = matched.usedByDevices || [];
+  let alreadyUsed = usedDevices.includes(deviceId);
+
+  if (!alreadyUsed && matched.maxDevices && usedDevices.length >= matched.maxDevices) {
+    errMsgEl.innerText = "Mã code đã đạt giới hạn số người dùng!";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  let btn = document.getElementById('submitEnterCodeBtn');
+  btn.disabled = true;
+
+  let applyPremium = () => {
+    localStorage.setItem('mc_premium_code_id', matched.id);
+    localStorage.setItem('mc_premium_expires', matched.expiresAt || '');
+    isPremium = true;
+    updateAdAndAccessUI();
+    closeEnterCodeModal();
+    showToast("Kích hoạt Premium thành công! Chúc bạn trải nghiệm vui vẻ 🎉");
+    btn.disabled = false;
+  };
+
+  if (alreadyUsed) {
+    applyPremium();
+  } else {
+    db.collection("premiumCodes").doc(matched.id).update({
+      usedByDevices: firebase.firestore.FieldValue.arrayUnion(deviceId)
+    }).then(applyPremium).catch(e => {
+      errMsgEl.innerText = e.message;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+    });
+  }
+}
+
+function initPremiumFromStorage() {
+  let codeId = localStorage.getItem('mc_premium_code_id');
+  if (!codeId) return;
+  let expiresRaw = localStorage.getItem('mc_premium_expires');
+  let expiresAt = expiresRaw ? parseInt(expiresRaw) : null;
+  if (expiresAt && expiresAt < Date.now()) {
+    revokePremium();
+    return;
+  }
+  isPremium = true;
+  updateAdAndAccessUI();
+}
+
+function verifyPremiumStillValid() {
+  let codeId = localStorage.getItem('mc_premium_code_id');
+  if (!codeId) return;
+  let stillExists = activeCodes.some(c => c.id === codeId);
+  if (!stillExists) {
+    revokePremium();
+    return;
+  }
+  let matched = activeCodes.find(c => c.id === codeId);
+  if (matched.expiresAt && matched.expiresAt < Date.now()) {
+    revokePremium();
+  }
+}
+
+function revokePremium() {
+  let wasPremium = isPremium;
+  localStorage.removeItem('mc_premium_code_id');
+  localStorage.removeItem('mc_premium_expires');
+  isPremium = false;
+  updateAdAndAccessUI();
+  if (wasPremium) showToast("Code Premium của bạn đã hết hạn!");
+}
 
 let popunderAdLoaded = false;
 
-firebase.auth().onAuthStateChanged((user) => {
-  isAdmin = !!user;
-  document.getElementById('adminBtn').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('logoutBtn').style.display = isAdmin ? 'flex' : 'none';
-
+function updateAdAndAccessUI() {
   const adContainer = document.getElementById('adContainer');
-  if (adContainer) adContainer.style.display = isAdmin ? 'none' : 'flex';
+  const shouldHideAds = isAdmin || isPremium;
+  if (adContainer) adContainer.style.display = shouldHideAds ? 'none' : 'flex';
 
-  if (!isAdmin && !popunderAdLoaded) {
+  const premiumBadge = document.getElementById('premiumBadge');
+  if (premiumBadge) {
+    premiumBadge.style.display = (isPremium && !isAdmin) ? 'inline-flex' : 'none';
+    lucide.createIcons({ root: premiumBadge });
+  }
+
+  if (!shouldHideAds && !popunderAdLoaded) {
     const popunderScript1 = document.createElement('script');
     popunderScript1.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
     document.body.appendChild(popunderScript1);
@@ -1270,6 +1717,25 @@ firebase.auth().onAuthStateChanged((user) => {
 
     popunderAdLoaded = true;
   }
+}
+
+firebase.auth().onAuthStateChanged((user) => {
+  isAdmin = !!user;
+  document.getElementById('adminBtn').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('premiumManageBtn').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('logoutBtn').style.display = isAdmin ? 'flex' : 'none';
+
+  updateAdAndAccessUI();
+
+  if (isAdmin) {
+    cleanupExpiredCodes();
+    if (!expiredCodeCleanupInterval) {
+      expiredCodeCleanupInterval = setInterval(cleanupExpiredCodes, 60000);
+    }
+  } else if (expiredCodeCleanupInterval) {
+    clearInterval(expiredCodeCleanupInterval);
+    expiredCodeCleanupInterval = null;
+  }
 
   if(addons.length > 0) { renderHome(); renderPopular(); }
 });
@@ -1279,6 +1745,8 @@ window.onload = function() {
     document.getElementById('welcomeModal').classList.add('active');
   }
 
+  initPremiumFromStorage();
+
   db.collection("categories").orderBy("createdAt").onSnapshot((snapshot) => {
     customCategories = [];
     snapshot.forEach((doc) => {
@@ -1286,6 +1754,23 @@ window.onload = function() {
     });
     populateCatSelect();
     renderHome();
+    if (document.getElementById('newCatModal').classList.contains('active')) {
+      renderCustomCatList();
+    }
+  }, (error) => {
+    console.error(error);
+  });
+
+  db.collection("premiumCodes").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+    activeCodes = [];
+    snapshot.forEach((doc) => {
+      activeCodes.push({ id: doc.id, ...doc.data() });
+    });
+    verifyPremiumStillValid();
+    if (isAdmin) cleanupExpiredCodes();
+    if (document.getElementById('premiumManageModal').classList.contains('active')) {
+      renderActiveCodesList();
+    }
   }, (error) => {
     console.error(error);
   });
@@ -1328,7 +1813,7 @@ function closeConvertModal() {
 }
 
 function openTranslateModal() {
-  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  if (!isAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
   document.getElementById('translateFileInput').value = '';
   document.getElementById('translateModal').classList.add('active');
   lucide.createIcons({ root: document.getElementById('translateModal') });
@@ -1696,6 +2181,10 @@ function handleSearch(e) {
   if (e.key === 'Enter') {
     if (val === 'SignUpAdmin') { openLoginModal(); return; }
   }
+  if (val.toLowerCase() === 'code' && !document.getElementById('enterCodeModal').classList.contains('active')) {
+    openEnterCodeModal();
+    return;
+  }
   filterBySearch(val);
 }
 
@@ -1943,7 +2432,7 @@ function switchTab(tabId, el) {
 }
 
 function openEditAddonModal() {
-  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  if (!isAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
   document.getElementById('editAddonFileInput').value = "";
   document.getElementById('editAddonName').value = "";
   document.getElementById('editAddonDesc').value = "";
