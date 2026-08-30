@@ -136,15 +136,40 @@ header::before {
   color: var(--primary);
   white-space: nowrap;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-ios);
+  overflow: hidden;
+  max-width: 160px;
+  opacity: 1;
+  transition: transform var(--dur-fast) var(--ease-ios),
+              max-width 0.38s cubic-bezier(0.34, 1.4, 0.4, 1),
+              opacity 0.22s var(--ease-ios),
+              margin-right 0.38s cubic-bezier(0.34, 1.4, 0.4, 1);
 }
 .logo:active { transform: scale(0.93); }
-.logo img { width: 32px; height: 32px; object-fit: contain; transition: transform var(--dur-base) var(--ease-spring); }
+.logo img { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; transition: transform var(--dur-base) var(--ease-spring); }
 .logo:active img { transform: rotate(-8deg) scale(0.9); }
+
+header:focus-within .logo {
+  max-width: 0;
+  opacity: 0;
+  margin-right: -12px;
+  pointer-events: none;
+}
 
 .search-box {
   flex: 1;
+  min-width: 0;
   position: relative;
+  transform-origin: right center;
+  transition: transform 0.42s cubic-bezier(0.32, 1.65, 0.35, 1);
+}
+header:focus-within .search-box {
+  animation: searchSlimeStretch 0.5s cubic-bezier(0.3, 1.7, 0.35, 1);
+}
+@keyframes searchSlimeStretch {
+  0% { transform: scaleX(1); }
+  35% { transform: scaleX(1.035); }
+  60% { transform: scaleX(0.99); }
+  100% { transform: scaleX(1); }
 }
 
 .search-box input {
@@ -735,6 +760,12 @@ header::before {
   color: white; font-size: 11px; font-weight: 700;
   padding: 3px 9px; border-radius: 100px;
   box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .premium-badge span { display: none; }
+  .premium-badge { padding: 5px; }
 }
 
 .floating-btn.premium-manage-btn { background-color: #8b5cf6; }
@@ -1102,7 +1133,7 @@ header::before {
     <input type="text" id="searchInput" placeholder="Tìm kiếm addon..." oninput="toggleClearBtn()" onkeyup="handleSearch(event)">
     <i data-lucide="x" class="clear-search" id="clearSearchBtn" onclick="clearSearch()"></i>
   </div>
-  <span id="premiumBadge" class="premium-badge" style="display:none;"><i data-lucide="crown" style="width:12px; height:12px;"></i> Premium</span>
+  <span id="premiumBadge" class="premium-badge" style="display:none;"><i data-lucide="crown" style="width:12px; height:12px;"></i><span>Premium</span></span>
   <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">
     <i data-lucide="moon"></i>
   </button>
