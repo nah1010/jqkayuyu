@@ -1119,6 +1119,138 @@ header:focus-within .search-box {
 }
 .copy-flash { animation: copyFlash 0.6s var(--ease-ios); }
 
+/* ===== Bong bóng bộ lọc (Filter Bubble) ===== */
+.floating-btn.filter-btn {
+  background-color: #6366f1;
+  position: relative;
+}
+.filter-btn-dot {
+  position: absolute; top: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--danger); color: white;
+  font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--card-bg);
+  opacity: 0; transform: scale(0);
+  transition: opacity var(--dur-base) var(--ease-spring), transform var(--dur-base) var(--ease-spring);
+}
+.filter-btn-dot.show { opacity: 1; transform: scale(1); }
+
+@keyframes filterBubbleAttention {
+  0%, 100% { box-shadow: var(--shadow-md); }
+  50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.18); }
+}
+.floating-btn.filter-btn.attention { animation: popIn 0.55s var(--ease-spring) backwards, filterBubbleAttention 2.2s var(--ease-ios) 0.6s 2; }
+
+/* ===== Modal bộ lọc kiểu bottom-sheet ===== */
+.filter-modal-overlay { align-items: flex-end; }
+@media (min-width: 640px) { .filter-modal-overlay { align-items: center; } }
+
+.filter-modal-box {
+  max-width: 480px;
+  max-height: 82vh;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  transform: translateY(100%);
+}
+@media (min-width: 640px) {
+  .filter-modal-box { border-radius: var(--radius-lg); transform: scale(0.9) translateY(28px); }
+}
+.filter-modal-overlay.active .filter-modal-box { transform: translateY(0); }
+@media (min-width: 640px) {
+  .filter-modal-overlay.active .filter-modal-box { transform: scale(1) translateY(0); }
+}
+
+.filter-sheet-handle {
+  width: 40px; height: 4px; border-radius: 100px;
+  background: var(--border); margin: 10px auto 0;
+  flex-shrink: 0;
+}
+@media (min-width: 640px) { .filter-sheet-handle { display: none; } }
+
+.filter-group { margin-bottom: 22px; animation: sectionIn 0.4s var(--ease-ios) backwards; }
+.filter-group:nth-child(1) { animation-delay: 0.02s; }
+.filter-group:nth-child(2) { animation-delay: 0.06s; }
+.filter-group:nth-child(3) { animation-delay: 0.1s; }
+.filter-group:nth-child(4) { animation-delay: 0.14s; }
+.filter-group:last-child { margin-bottom: 0; }
+
+.filter-group-title {
+  font-size: 13px; font-weight: 700; color: var(--text-main);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px;
+}
+.filter-group-title i { width: 15px; height: 15px; color: var(--primary); }
+
+.filter-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.filter-chip {
+  padding: 8px 14px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: var(--bg-main);
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  cursor: pointer; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: transform var(--dur-fast) var(--ease-spring),
+              background-color var(--dur-base) var(--ease-ios),
+              border-color var(--dur-base) var(--ease-ios),
+              color var(--dur-base) var(--ease-ios);
+}
+.filter-chip i { width: 13px; height: 13px; }
+.filter-chip:active { transform: scale(0.93); }
+.filter-chip.selected {
+  background: var(--primary); border-color: var(--primary);
+  color: white; box-shadow: var(--shadow-primary);
+}
+.filter-chip.selected i { animation: chipCheckPop var(--dur-base) var(--ease-spring); }
+@keyframes chipCheckPop { 0% { transform: scale(0) rotate(-45deg); } 100% { transform: scale(1) rotate(0deg); } }
+
+.filter-modal-footer-count {
+  font-size: 12.5px; color: var(--text-muted); font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+}
+.filter-modal-footer-count b { color: var(--primary); font-weight: 800; }
+
+/* ===== Banner "đang lọc" trên trang chủ ===== */
+.active-filter-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  margin-bottom: 16px;
+  animation: sectionIn 0.4s var(--ease-ios);
+}
+.active-filter-bar-label {
+  font-size: 13px; font-weight: 700; color: var(--text-main);
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.active-filter-bar-label i { width: 15px; height: 15px; color: #6366f1; }
+.active-filter-tags { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+.active-filter-tag {
+  background: rgba(99, 102, 241, 0.12); color: #6366f1;
+  padding: 4px 10px; border-radius: 100px;
+  font-size: 11.5px; font-weight: 700;
+}
+[data-theme="dark"] .active-filter-tag { background: rgba(129, 140, 248, 0.18); color: #a5b4fc; }
+.active-filter-clear {
+  background: none; border: none; color: var(--danger);
+  font-size: 12.5px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 8px; border-radius: 6px;
+  transition: background-color var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring);
+  white-space: nowrap;
+}
+.active-filter-clear:active { transform: scale(0.92); }
+.active-filter-clear i { width: 13px; height: 13px; }
+
+/* ===== Badge nguồn / loại trên thẻ addon ===== */
+.meta-pill-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.source-pill, .kind-pill {
+  font-size: 9.5px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; letter-spacing: 0.2px;
+}
+.source-pill { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.kind-pill { background: rgba(59, 130, 246, 0.14); color: #1d4ed8; }
+[data-theme="dark"] .source-pill { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+[data-theme="dark"] .kind-pill { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
 </style>
 </head>
 <body>
@@ -1300,6 +1432,10 @@ header:focus-within .search-box {
   <button id="logoutBtn" class="floating-btn logout-btn" style="display:none; animation-delay: 0.2s;" onclick="logoutAdmin()" title="Đăng xuất">
     <i data-lucide="log-out"></i>
   </button>
+  <button id="filterBubbleBtn" class="floating-btn filter-btn" style="animation-delay: 0.25s;" onclick="openFilterModal()" title="Bộ lọc Addon">
+    <i data-lucide="menu"></i>
+    <span id="filterBtnDot" class="filter-btn-dot">0</span>
+  </button>
   <button id="zaloBtn" class="floating-btn zalo-btn" style="animation-delay: 0.3s;" onclick="openZaloModal()" title="Liên hệ">
     <i data-lucide="message-circle"></i>
   </button>
@@ -1462,6 +1598,14 @@ header:focus-within .search-box {
           <button type="button" class="btn btn-secondary" style="padding:0 14px;" onclick="openNewCatModal()" title="Thêm thể loại mới"><i data-lucide="plus"></i></button>
         </div>
       </div>
+
+      <div class="form-group">
+        <label>Thuộc loại *</label>
+        <select id="postKind">
+          <option value="Addon">Addon</option>
+          <option value="Pack">Pack</option>
+        </select>
+      </div>
       
       <div class="form-group">
         <label>Ảnh Addon (Chọn ảnh để mở công cụ Cắt)</label>
@@ -1521,6 +1665,36 @@ header:focus-within .search-box {
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" style="width:100%;" onclick="closeNewCatModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="filterModal" class="modal-overlay filter-modal-overlay">
+  <div class="modal-box filter-modal-box">
+    <div class="filter-sheet-handle"></div>
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="sliders-horizontal" style="color:#6366f1;"></i> Bộ Lọc Addon</span>
+      <button class="close-x" onclick="closeFilterModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="filter-group">
+        <div class="filter-group-title"><i data-lucide="shapes"></i> Thể loại</div>
+        <div class="filter-chip-row" id="filterCatRow"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title"><i data-lucide="package"></i> Loại</div>
+        <div class="filter-chip-row" id="filterKindRow"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title"><i data-lucide="flame"></i> Độ nổi tiếng</div>
+        <div class="filter-chip-row" id="filterHotRow"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="filter-modal-footer-count"><i data-lucide="package-search" style="width:14px; height:14px;"></i> <b id="filterResultCount">0</b> addon phù hợp</div>
+      <div style="flex:1"></div>
+      <button class="btn btn-secondary" onclick="resetFilters()">Đặt lại</button>
+      <button class="btn btn-primary" onclick="applyFiltersAndClose()"><i data-lucide="check-circle"></i> Áp dụng</button>
     </div>
   </div>
 </div>
@@ -1799,6 +1973,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* ===== Hàm bảo mật: chống XSS khi chèn dữ liệu vào innerHTML ===== */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeAttr(str) { return escapeHtml(str); }
+function safeImgSrc(src) {
+  if (typeof src !== 'string') return 'https://picsum.photos/300/200';
+  let trimmed = src.trim();
+  if (/^(https?:|data:image\/)/i.test(trimmed)) return trimmed;
+  return 'https://picsum.photos/300/200';
+}
+
 const DEFAULT_CATEGORIES = [
   { name: "Hỗ trợ sinh tồn", icon: "heart-pulse" },
   { name: "Giải trí", icon: "gamepad-2" },
@@ -1859,6 +2051,9 @@ function deleteCategory(id) {
     if (!confirm(`Xóa thể loại "${catItem.name}"?`)) return;
   }
   db.collection("categories").doc(id).delete().then(() => {
+    activeFilters.cat = activeFilters.cat.filter(c => c !== catItem.name);
+    pendingFilters.cat = pendingFilters.cat.filter(c => c !== catItem.name);
+    updateFilterBubbleDot();
     showToast("Đã xóa thể loại!");
   }).catch(e => showToast(e.message));
 }
@@ -1880,6 +2075,122 @@ function submitNewCat() {
   }).catch(e => {
     showToast(e.message);
   }).finally(() => { btn.disabled = false; });
+}
+
+/* ===== Hệ thống Bộ Lọc Addon (kiểu bộ lọc tìm kiếm YouTube) ===== */
+const FILTER_KIND_OPTIONS = [
+  { value: "Addon", icon: "puzzle" },
+  { value: "Pack", icon: "package" }
+];
+const FILTER_HOT_OPTIONS = [
+  { value: "hot", label: "Đang nổi tiếng", icon: "flame" }
+];
+
+let activeFilters = { cat: [], kind: [], hot: [] };
+let pendingFilters = { cat: [], kind: [], hot: [] };
+
+function cloneFilters(f) {
+  return { cat: [...f.cat], kind: [...f.kind], hot: [...f.hot] };
+}
+
+function totalActiveFilterCount(f) {
+  return f.cat.length + f.kind.length + f.hot.length;
+}
+
+function openFilterModal() {
+  pendingFilters = cloneFilters(activeFilters);
+  renderFilterChips();
+  document.getElementById('filterModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('filterModal') });
+}
+
+function closeFilterModal() {
+  document.getElementById('filterModal').classList.remove('active');
+}
+
+function toggleFilterValue(group, value) {
+  let arr = pendingFilters[group];
+  let idx = arr.indexOf(value);
+  if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+  renderFilterChips();
+}
+
+function buildChip(group, value, label, icon) {
+  let selected = pendingFilters[group].includes(value);
+  let chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'filter-chip' + (selected ? ' selected' : '');
+  chip.innerHTML = (selected ? '<i data-lucide="check"></i>' : (icon ? `<i data-lucide="${icon}"></i>` : '')) + `<span>${escapeHtml(label)}</span>`;
+  chip.onclick = () => toggleFilterValue(group, value);
+  return chip;
+}
+
+function renderFilterChips() {
+  let catRow = document.getElementById('filterCatRow');
+  catRow.innerHTML = '';
+  getAllCategories().forEach(c => catRow.appendChild(buildChip('cat', c.name, c.name, c.icon)));
+
+  let kindRow = document.getElementById('filterKindRow');
+  kindRow.innerHTML = '';
+  FILTER_KIND_OPTIONS.forEach(o => kindRow.appendChild(buildChip('kind', o.value, o.value, o.icon)));
+
+  let hotRow = document.getElementById('filterHotRow');
+  hotRow.innerHTML = '';
+  FILTER_HOT_OPTIONS.forEach(o => hotRow.appendChild(buildChip('hot', o.value, o.label, o.icon)));
+
+  lucide.createIcons({ root: document.getElementById('filterModal') });
+  updateFilterLiveCount();
+}
+
+function getFilteredAddons(list, filters) {
+  filters = filters || activeFilters;
+  if (totalActiveFilterCount(filters) === 0) return list;
+  return list.filter(item => {
+    if (filters.cat.length && !filters.cat.includes(item.cat)) return false;
+    if (filters.kind.length && !filters.kind.includes(item.kind)) return false;
+    if (filters.hot.length && !(item.views >= 50)) return false;
+    return true;
+  });
+}
+
+function updateFilterLiveCount() {
+  let countEl = document.getElementById('filterResultCount');
+  if (!countEl) return;
+  countEl.innerText = getFilteredAddons(addons, pendingFilters).length;
+}
+
+function resetFilters() {
+  pendingFilters = { cat: [], kind: [], hot: [] };
+  renderFilterChips();
+}
+
+function applyFiltersAndClose() {
+  activeFilters = cloneFilters(pendingFilters);
+  closeFilterModal();
+  renderHome();
+  updateFilterBubbleDot();
+}
+
+function updateFilterBubbleDot() {
+  let dot = document.getElementById('filterBtnDot');
+  if (!dot) return;
+  let count = totalActiveFilterCount(activeFilters);
+  dot.innerText = count;
+  dot.classList.toggle('show', count > 0);
+}
+
+function clearActiveFilters() {
+  activeFilters = { cat: [], kind: [], hot: [] };
+  renderHome();
+  updateFilterBubbleDot();
+}
+
+function activeFilterLabels() {
+  let labels = [];
+  activeFilters.cat.forEach(v => labels.push(v));
+  activeFilters.kind.forEach(v => labels.push(v));
+  activeFilters.hot.forEach(v => labels.push('Đang nổi tiếng'));
+  return labels;
 }
 
 let addons = [];
@@ -2353,6 +2664,7 @@ window.onload = function() {
 
   initPremiumFromStorage();
   renderShopGrid();
+  updateFilterBubbleDot();
 
   db.collection("categories").orderBy("createdAt").onSnapshot((snapshot) => {
     customCategories = [];
@@ -2363,6 +2675,9 @@ window.onload = function() {
     renderHome();
     if (document.getElementById('newCatModal').classList.contains('active')) {
       renderCustomCatList();
+    }
+    if (document.getElementById('filterModal').classList.contains('active')) {
+      renderFilterChips();
     }
   }, (error) => {
     console.error(error);
@@ -2704,6 +3019,7 @@ function openPostModal() {
   document.getElementById('postLink').value = "";
   document.getElementById('postDesc').value = "";
   document.getElementById('postOrder').value = "0";
+  document.getElementById('postKind').value = "Addon";
   document.getElementById('postImgFile').value = "";
   if(cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('cropEditor').style.display = 'none';
@@ -2725,12 +3041,14 @@ function submitPost() {
   let title = document.getElementById('postTitle').value.trim();
   let link = document.getElementById('postLink').value.trim();
   let cat = document.getElementById('postCat').value;
+  let kind = document.getElementById('postKind').value;
   let desc = document.getElementById('postDesc').value.trim();
   let order = parseInt(document.getElementById('postOrder').value) || 0;
   let btn = document.getElementById('submitPostBtn');
 
   if (!title || title.length > 30) { showToast("Tên addon trống hoặc quá 30 chữ!"); return; }
   if (!link) { showToast("Vui lòng nhập link addon!"); return; }
+  if (!/^https?:\/\//i.test(link)) { showToast("Link addon phải bắt đầu bằng http:// hoặc https://"); return; }
 
   btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Đang xử lý...';
   btn.style.opacity = '0.7';
@@ -2739,7 +3057,7 @@ function submitPost() {
   if (cropper) applyCrop();
 
   let addonData = {
-    title: title, link: link, cat: cat, desc: desc || "Không có mô tả.", order: order
+    title: title, link: link, cat: cat, kind: kind, desc: desc || "Không có mô tả.", order: order
   };
   if (uploadedImgBase64) addonData.img = uploadedImgBase64;
 
@@ -2766,6 +3084,7 @@ function editCurrentAddon() {
   document.getElementById('postTitle').value = item.title;
   document.getElementById('postLink').value = item.link;
   document.getElementById('postCat').value = item.cat;
+  document.getElementById('postKind').value = item.kind || "Addon";
   document.getElementById('postDesc').value = item.desc;
   document.getElementById('postOrder').value = item.order || 0;
   document.getElementById('postImgFile').value = "";
@@ -2846,18 +3165,26 @@ function createCard(item) {
   }
 
   let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : '';
+
+  let safeTitle = escapeHtml(item.title);
+  let safeCat = escapeHtml(item.cat);
+  let safeImg = escapeAttr(safeImgSrc(item.img));
+
+  let metaPills = `<span class="cat-pill">${safeCat}</span>`;
+  if (item.source) metaPills = `<span class="source-pill">${escapeHtml(item.source)}</span>` + metaPills;
+  if (item.kind) metaPills = `<span class="kind-pill">${escapeHtml(item.kind)}</span>` + metaPills;
   
   card.innerHTML = `
     ${deleteBtnHtml}
     <div class="addon-img-wrapper">
-      <img class="addon-img" src="${item.img}" alt="${item.title}" loading="lazy">
+      <img class="addon-img" src="${safeImg}" alt="${safeTitle}" loading="lazy">
       <div class="addon-badges">${badges}</div>
     </div>
     <div class="addon-info">
-      <div class="addon-name">${item.title}</div>
+      <div class="addon-name">${safeTitle}</div>
       <div class="addon-meta">
         <span style="display:flex; align-items:center; gap:4px; font-weight:600;"><i data-lucide="eye" style="width:14px; height:14px;"></i> ${item.views || 0}</span>
-        <span class="cat-pill">${item.cat}</span>
+        <span class="meta-pill-row">${metaPills}</span>
       </div>
     </div>
   `;
@@ -2871,9 +3198,33 @@ function renderHome() {
     container.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><span>Hiện tại chưa có addon nào.<br>Hãy đăng nhập Admin để thêm mới!</span></div>'; 
     lucide.createIcons({root: container}); return; 
   }
+
+  let filteredAddons = getFilteredAddons(addons);
+  let hasFilter = totalActiveFilterCount(activeFilters) > 0;
+
+  if (hasFilter) {
+    let bar = document.createElement('div');
+    bar.className = 'active-filter-bar';
+    let tagsHtml = activeFilterLabels().map(l => `<span class="active-filter-tag">${escapeHtml(l)}</span>`).join('');
+    bar.innerHTML = `
+      <span class="active-filter-bar-label"><i data-lucide="sliders-horizontal"></i> Đang lọc:</span>
+      <span class="active-filter-tags">${tagsHtml}</span>
+      <button class="active-filter-clear" onclick="clearActiveFilters()"><i data-lucide="x-circle"></i> Xóa lọc</button>
+    `;
+    container.appendChild(bar);
+  }
+
+  if (filteredAddons.length === 0) {
+    let emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-state';
+    emptyDiv.innerHTML = '<i data-lucide="package-open"></i><span>Không có addon nào phù hợp với bộ lọc.<br>Hãy thử đổi lựa chọn khác nhé!</span>';
+    container.appendChild(emptyDiv);
+    lucide.createIcons({root: container});
+    return;
+  }
   
   getAllCategories().forEach(catObj => {
-    let catItems = addons.filter(a => a.cat === catObj.name);
+    let catItems = filteredAddons.filter(a => a.cat === catObj.name);
     if(catItems.length === 0) return;
     
     catItems.sort((a, b) => {
@@ -2884,7 +3235,7 @@ function renderHome() {
     
     let sec = document.createElement('div');
     sec.className = 'category-section';
-    sec.innerHTML = `<div class="category-title"><i data-lucide="${catObj.icon}"></i> ${catObj.name}</div>`;
+    sec.innerHTML = `<div class="category-title"><i data-lucide="${escapeAttr(catObj.icon)}"></i> ${escapeHtml(catObj.name)}</div>`;
     
     let sliderContainer = document.createElement('div');
     sliderContainer.className = 'slider-container';
@@ -3035,6 +3386,10 @@ function switchTab(tabId, el) {
   document.getElementById('navIndicator').style.transform = `translateX(${index * 100}%)`;
 
   if(tabId === 'tabDownloaded') renderDownloaded();
+
+  let filterBtn = document.getElementById('filterBubbleBtn');
+  if (filterBtn) filterBtn.style.display = (tabId === 'tabHome') ? 'flex' : 'none';
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
