@@ -2825,17 +2825,8 @@ function updateAdAndAccessUI() {
   updateToolLockUI('translateToolBanner', 'translateLockBadge', 'translateUpgradeLink', hasAccess);
   updateToolLockUI('editAddonToolBanner', 'editAddonLockBadge', 'editAddonUpgradeLink', hasAccess);
 
-  if (!shouldHideAds && !popunderAdLoaded) {
-    const popunderScript1 = document.createElement('script');
-    popunderScript1.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
-    document.body.appendChild(popunderScript1);
-
-    const popunderScript2 = document.createElement('script');
-    popunderScript2.src = 'https://pl31085638.profitableratecpmnetwork.com/bf/b9/cc/bfb9cc20585f009f49c54c4f89bb8fe2.js';
-    document.body.appendChild(popunderScript2);
-
-    popunderAdLoaded = true;
-  }
+  // Popunder ads đã được gỡ bỏ theo yêu cầu - giảm quảng cáo khi vừa vào web
+  // Banner quảng cáo 320x50 ở đầu trang vẫn giữ nguyên
 }
 
 firebase.auth().onAuthStateChanged((user) => {
