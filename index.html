@@ -1064,6 +1064,104 @@ header:focus-within .search-box {
 .popular-banner.tool-locked:hover .tool-upgrade-link { gap: 7px; }
 .tool-upgrade-link i { width: 13px; height: 13px; }
 
+/* ===== TERMINAL HỒI SINH TRONG HARDCORE ===== */
+.revive-term-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.82);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-ios);
+}
+.revive-term-overlay.active { opacity: 1; pointer-events: auto; }
+
+.revive-term-box {
+  width: 100%; max-width: 560px; max-height: 78vh;
+  background: #0b0f0d;
+  border: 1px solid #1f3a2c;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.08), 0 24px 60px -12px rgba(0,0,0,0.6), 0 0 40px -8px rgba(16,185,129,0.15);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.94) translateY(20px);
+  opacity: 0;
+  transition: transform var(--dur-slow) var(--ease-spring), opacity var(--dur-base) var(--ease-ios);
+}
+.revive-term-overlay.active .revive-term-box { transform: scale(1) translateY(0); opacity: 1; }
+
+.revive-term-titlebar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: #121a16;
+  border-bottom: 1px solid #1f3a2c;
+  flex-shrink: 0;
+}
+.revive-term-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.revive-term-dot.r { background: #ff5f56; }
+.revive-term-dot.y { background: #ffbd2e; }
+.revive-term-dot.g { background: #27c93f; }
+.revive-term-titletext {
+  margin-left: 6px; font-family: monospace; font-size: 12px; font-weight: 600;
+  color: #7de8ac; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.revive-term-close {
+  margin-left: auto; background: none; border: none; color: #6b8f7c;
+  cursor: pointer; width: 26px; height: 26px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background var(--dur-fast) var(--ease-ios), color var(--dur-fast) var(--ease-ios);
+}
+.revive-term-close:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+.revive-term-close i { width: 15px; height: 15px; }
+
+.revive-term-body {
+  flex: 1; overflow-y: auto;
+  padding: 14px 16px 18px;
+  font-family: monospace; font-size: 12.5px; line-height: 1.72;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.014) 0px, rgba(255,255,255,0.014) 1px, transparent 1px, transparent 2px);
+  scroll-behavior: smooth;
+}
+.revive-term-line {
+  white-space: pre-wrap; word-break: break-all;
+  color: #a8f0c6;
+  opacity: 0;
+  animation: reviveLineIn 0.16s var(--ease-ios) forwards;
+}
+@keyframes reviveLineIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.revive-term-line .rt-dim { color: #4d6b5a; }
+.revive-term-line .rt-warn { color: #ffbd2e; }
+.revive-term-line .rt-err { color: #ff6b6b; }
+.revive-term-line .rt-ok { color: #27c93f; font-weight: 700; }
+.revive-term-line .rt-accent { color: #58d68d; font-weight: 700; }
+.revive-term-line .rt-tag { color: #5aa9e6; }
+.revive-term-line .rt-magic { color: #d98cff; }
+
+.revive-term-cursor-line { display: flex; align-items: center; gap: 6px; color: #4d6b5a; }
+.revive-term-cursor {
+  display: inline-block; width: 7px; height: 14px;
+  background: #27c93f;
+  animation: reviveCursorBlink 0.9s steps(1) infinite;
+}
+@keyframes reviveCursorBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.revive-term-footer {
+  padding: 12px 16px; border-top: 1px solid #1f3a2c;
+  background: #0e1512; flex-shrink: 0;
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+.revive-term-footer .btn-primary { background: #1f9d5c; }
+.revive-term-footer .btn-primary:hover { background: #178049; }
+.revive-term-footer .btn-primary:disabled {
+  opacity: 0.5; cursor: not-allowed; transform: none !important;
+}
+
+.revive-term-body::-webkit-scrollbar { width: 8px; }
+.revive-term-body::-webkit-scrollbar-track { background: transparent; }
+.revive-term-body::-webkit-scrollbar-thumb { background: #1f3a2c; border-radius: 4px; }
+
 /* Modal mã đơn hàng */
 .order-code-box {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -1419,6 +1517,16 @@ header:focus-within .search-box {
       <a id="editAddonUpgradeLink" class="tool-upgrade-link" style="display:none;" onclick="event.stopPropagation(); goToShopFromTools();"><i data-lucide="arrow-up-circle"></i> Nâng cấp Premium để mở khoá</a>
     </div>
 
+    <div id="reviveToolBanner" class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openReviveModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <i data-lucide="heart-pulse" style="color: var(--danger);"></i>
+        Hồi Sinh Trong Hardcore
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Tải file thế giới Hardcore đã "toang" lên, hệ thống sẽ tự động gỡ dấu vết Game Over và hồi sinh lại thế giới của bạn!
+      </p>
+    </div>
+
   </div>
 </div>
 
@@ -1491,6 +1599,45 @@ header:focus-within .search-box {
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeConvertModal()">Hủy</button>
       <button class="btn btn-primary" onclick="submitConvertAddon()"><i data-lucide="check-circle"></i> Đồng ý</button>
+    </div>
+  </div>
+</div>
+
+<div id="reviveModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="heart-pulse" style="color:var(--danger);"></i> Hồi Sinh Trong Hardcore</span>
+      <button class="close-x" onclick="closeReviveModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Mục 1: Gửi file thế giới (Tối đa 500MB) *</label>
+        <input type="file" id="reviveFileInput" accept=".mcworld,.mcworld.zip,.zip">
+        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Chỉ hỗ trợ file đuôi <code>.mcworld</code> hoặc <code>.mcworld.zip</code></p>
+      </div>
+      <p style="font-size: 13px; color: var(--warning); font-weight: 500; margin-top: 12px;">
+        Lưu ý: Công cụ sẽ xoá file log Game Over và đánh dấu lại thế giới của bạn là đã hồi sinh. Vui lòng không tắt trình duyệt trong quá trình xử lý!
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeReviveModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitReviveWorld()"><i data-lucide="zap"></i> Hồi Sinh</button>
+    </div>
+  </div>
+</div>
+
+<div id="reviveTermOverlay" class="revive-term-overlay">
+  <div class="revive-term-box">
+    <div class="revive-term-titlebar">
+      <span class="revive-term-dot r"></span>
+      <span class="revive-term-dot y"></span>
+      <span class="revive-term-dot g"></span>
+      <span class="revive-term-titletext">hoi-sinh-engine — hardcore-recovery.sh</span>
+      <button class="revive-term-close" id="reviveTermCloseBtn" onclick="closeReviveTerm()" title="Đóng"><i data-lucide="x"></i></button>
+    </div>
+    <div class="revive-term-body" id="reviveTermBody"></div>
+    <div class="revive-term-footer">
+      <button class="btn btn-secondary" id="reviveTermCancelBtn" onclick="closeReviveTerm()">Đóng</button>
     </div>
   </div>
 </div>
@@ -2978,6 +3125,262 @@ async function submitConvertAddon() {
   } catch (err) {
     console.error(err);
     showToast("Có lỗi xảy ra trong quá trình xử lý!");
+  }
+}
+
+/* ================= HỒI SINH TRONG HARDCORE ================= */
+
+function openReviveModal() {
+  document.getElementById('reviveFileInput').value = '';
+  document.getElementById('reviveModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('reviveModal') });
+}
+function closeReviveModal() {
+  document.getElementById('reviveModal').classList.remove('active');
+}
+
+let reviveTermBusy = false;
+
+function openReviveTerm() {
+  const body = document.getElementById('reviveTermBody');
+  body.innerHTML = '';
+  const cancelBtn = document.getElementById('reviveTermCancelBtn');
+  const closeXBtn = document.getElementById('reviveTermCloseBtn');
+  cancelBtn.textContent = 'Đang xử lý...';
+  cancelBtn.disabled = true;
+  closeXBtn.style.visibility = 'hidden';
+  reviveTermBusy = true;
+  document.getElementById('reviveTermOverlay').classList.add('active');
+}
+
+function closeReviveTerm() {
+  if (reviveTermBusy) return;
+  document.getElementById('reviveTermOverlay').classList.remove('active');
+}
+
+function reviveTermFinish(success) {
+  reviveTermBusy = false;
+  const cancelBtn = document.getElementById('reviveTermCancelBtn');
+  const closeXBtn = document.getElementById('reviveTermCloseBtn');
+  cancelBtn.textContent = success ? 'Hoàn tất, đóng lại' : 'Đóng';
+  cancelBtn.disabled = false;
+  closeXBtn.style.visibility = 'visible';
+}
+
+function reviveTermSleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function reviveEscapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+
+async function reviveTermPrint(html, opts) {
+  opts = opts || {};
+  const body = document.getElementById('reviveTermBody');
+  const line = document.createElement('div');
+  line.className = 'revive-term-line';
+  line.innerHTML = html;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+  await reviveTermSleep(opts.delay !== undefined ? opts.delay : 55);
+}
+
+function reviveRandHex(len) {
+  let s = '';
+  const chars = '0123456789abcdef';
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+function reviveRandInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* In một loạt dòng log "kỹ thuật" ngẫu nhiên cho ngầu, không ảnh hưởng tới xử lý thật */
+async function reviveTermSpam(prefixTag, count) {
+  const verbs = [
+    'validating chunk header', 'scanning region file', 'checksum pass',
+    'resolving NBT tag tree', 'indexing entity table', 'reading palette block',
+    'mapping subchunk offset', 'flushing buffer segment', 'probing leveldb key',
+    'realigning byte cursor', 'decoding varint stream', 'walking directory tree'
+  ];
+  for (let i = 0; i < count; i++) {
+    const v = verbs[Math.floor(Math.random() * verbs.length)];
+    const addr = '0x' + reviveRandHex(8);
+    const chunkX = reviveRandInt(-800, 800);
+    const chunkZ = reviveRandInt(-800, 800);
+    await reviveTermPrint(
+      `<span class="rt-dim">[${prefixTag}]</span> <span class="rt-tag">${v}</span> <span class="rt-dim">@ ${addr} · chunk(${chunkX},${chunkZ}) · ${reviveRandInt(1,64)}kb</span>`,
+      { delay: reviveRandInt(18, 40) }
+    );
+  }
+}
+
+function reviveTermCursorRow(text) {
+  const body = document.getElementById('reviveTermBody');
+  const row = document.createElement('div');
+  row.className = 'revive-term-line revive-term-cursor-line';
+  row.innerHTML = `<span>${text}</span><span class="revive-term-cursor"></span>`;
+  body.appendChild(row);
+  body.scrollTop = body.scrollHeight;
+  return row;
+}
+
+async function submitReviveWorld() {
+  const fileInput = document.getElementById('reviveFileInput');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    showToast("Vui lòng chọn file thế giới!");
+    return;
+  }
+
+  const fileName = file.name.toLowerCase();
+  const isValidExt = fileName.endsWith('.mcworld') || fileName.endsWith('.mcworld.zip');
+  if (!isValidExt) {
+    showToast("Chỉ hỗ trợ file đuôi .mcworld hoặc .mcworld.zip");
+    return;
+  }
+
+  if (file.size > 500 * 1024 * 1024) {
+    showToast("File vượt quá 500MB cho phép!");
+    return;
+  }
+
+  closeReviveModal();
+  openReviveTerm();
+
+  await reviveTermPrint(`<span class="rt-accent">$ ./hoi-sinh --input "${reviveEscapeHtml(file.name)}" --mode=hardcore-recovery</span>`, { delay: 120 });
+  await reviveTermPrint(`<span class="rt-dim">Hồi Sinh Trong Hardcore Engine v1.0 — khởi động...</span>`, { delay: 200 });
+  await reviveTermPrint(`<span class="rt-dim">Kích thước file: ${(file.size / (1024*1024)).toFixed(2)} MB</span>`, { delay: 150 });
+
+  try {
+    /* ---------- BƯỚC 1: GIẢI NÉN ---------- */
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 1/5]</span> Đang giải nén thế giới...`, { delay: 120 });
+
+    let workingFile = file;
+    if (!fileName.endsWith('.zip')) {
+      const renamedName = file.name + '.zip';
+      workingFile = new File([file], renamedName, { type: 'application/zip' });
+      await reviveTermPrint(`<span class="rt-dim">Không thấy đuôi .zip, tự động đổi tên → ${reviveEscapeHtml(renamedName)}</span>`, { delay: 90 });
+    }
+
+    const zip = new JSZip();
+    let loadedZip;
+    try {
+      loadedZip = await zip.loadAsync(workingFile);
+    } catch (e) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không thể giải nén file! File có thể bị hỏng hoặc không đúng định dạng .mcworld</span>`, { delay: 50 });
+      showToast("Không thể giải nén file thế giới, hãy kiểm tra lại!");
+      reviveTermFinish(false);
+      return;
+    }
+
+    await reviveTermSpam('unzip', 6);
+    await reviveTermPrint(`<span class="rt-ok">✓ Giải nén thành công (${Object.keys(loadedZip.files).length} mục)</span>`, { delay: 140 });
+
+    /* ---------- BƯỚC 2: TÌM FILE LOG ---------- */
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 2/5]</span> Đang dò tìm dấu vết Game Over trong /db/...`, { delay: 120 });
+    await reviveTermSpam('scan', 5);
+
+    const logPaths = [];
+    loadedZip.forEach((relativePath, zipEntry) => {
+      if (zipEntry.dir) return;
+      if (!relativePath.toLowerCase().endsWith('.log')) return;
+      const slashIdx = relativePath.lastIndexOf('/');
+      const parentDir = slashIdx === -1 ? '' : relativePath.substring(0, slashIdx);
+      const parentFolderName = parentDir.substring(parentDir.lastIndexOf('/') + 1);
+      if (parentFolderName.toLowerCase() === 'db') {
+        logPaths.push(relativePath);
+      }
+    });
+
+    if (logPaths.length === 0) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không tìm thấy file log trong thư mục db/. Thế giới này có thể không phải bản Hardcore đã Game Over, hoặc cấu trúc file không hợp lệ.</span>`, { delay: 50 });
+      showToast("Không tìm thấy file log, kiểm tra lại file thế giới!");
+      reviveTermFinish(false);
+      return;
+    }
+
+    await reviveTermPrint(`<span class="rt-warn">⚠ Lưu ý: file log kỹ thuật khá rối (mã hoá nhị phân, khó đọc bằng mắt thường), hệ thống sẽ tự xử lý giúp bạn:D</span>`, { delay: 100 });
+    await reviveTermPrint(`<span class="rt-ok">✓ Tìm thấy ${logPaths.length} file log cần xoá</span>`, { delay: 140 });
+    for (const p of logPaths) {
+      await reviveTermPrint(`<span class="rt-dim">  • ${reviveEscapeHtml(p)}</span>`, { delay: 40 });
+    }
+
+    /* ---------- BƯỚC 3: XOÁ FILE LOG ---------- */
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 3/5]</span> Đang xoá dấu vết Game Over...`, { delay: 120 });
+    await reviveTermSpam('purge', 4);
+    for (const p of logPaths) {
+      loadedZip.remove(p);
+      await reviveTermPrint(`<span class="rt-ok">✓ Đã xoá: <span class="rt-dim">${reviveEscapeHtml(p)}</span></span>`, { delay: 90 });
+    }
+
+    /* ---------- BƯỚC 4: TÌM levelname.txt ---------- */
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 4/5]</span> Đang định vị levelname.txt...`, { delay: 120 });
+    await reviveTermSpam('locate', 3);
+
+    let levelNamePath = null;
+    loadedZip.forEach((relativePath, zipEntry) => {
+      if (zipEntry.dir || levelNamePath) return;
+      if (relativePath.toLowerCase().endsWith('levelname.txt')) {
+        levelNamePath = relativePath;
+      }
+    });
+
+    if (!levelNamePath) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không tìm thấy levelname.txt trong thế giới này!</span>`, { delay: 50 });
+      showToast("Không tìm thấy levelname.txt, kiểm tra lại file thế giới!");
+      reviveTermFinish(false);
+      return;
+    }
+
+    await reviveTermPrint(`<span class="rt-ok">✓ Tìm thấy: <span class="rt-dim">${reviveEscapeHtml(levelNamePath)}</span></span>`, { delay: 140 });
+
+    /* ---------- BƯỚC 5: GHI DẤU HỒI SINH ---------- */
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 5/5]</span> Đang khắc dấu ấn hồi sinh vào thế giới...`, { delay: 120 });
+
+    const levelNameFile = loadedZip.file(levelNamePath);
+    const oldLevelName = await levelNameFile.async('string');
+    const newLevelName = oldLevelName.trimEnd() + ' - Đã được Hồi Sinh:D';
+    loadedZip.file(levelNamePath, newLevelName);
+
+    await reviveTermSpam('rewrite', 3);
+    await reviveTermPrint(`<span class="rt-magic">✦ ${reviveEscapeHtml(oldLevelName.trim())} <span class="rt-dim">→</span> ${reviveEscapeHtml(newLevelName)}</span>`, { delay: 160 });
+    await reviveTermPrint(`<span class="rt-ok">✓ Đã cập nhật levelname.txt</span>`, { delay: 140 });
+
+    /* ---------- ĐÓNG GÓI LẠI ---------- */
+    await reviveTermPrint(`<span class="rt-dim">Đang đóng gói lại thế giới...</span>`, { delay: 100 });
+    const content = await loadedZip.generateAsync({ type: 'blob' });
+
+    const cursorRow = reviveTermCursorRow('<span class="rt-dim">Chuẩn bị tải xuống</span>');
+    await reviveTermSleep(500);
+    cursorRow.remove();
+
+    const baseName = file.name.replace(/\.zip$/i, '');
+    const downloadName = '[DaHoiSinh]_' + baseName;
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(content);
+    downloadLink.download = downloadName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    await reviveTermPrint(`<span class="rt-ok">✓ HOÀN TẤT — thế giới đã được hồi sinh thành công!</span>`, { delay: 100 });
+    await reviveTermPrint(`<span class="rt-dim">Đã tải xuống: ${reviveEscapeHtml(downloadName)}</span>`, { delay: 80 });
+    await reviveTermPrint(`<span class="rt-accent">$ Chúc bạn sinh tồn tốt hơn lần này :D</span>`, { delay: 0 });
+
+    showToast("Đã hồi sinh thế giới thành công!");
+    reviveTermFinish(true);
+
+  } catch (err) {
+    console.error(err);
+    await reviveTermPrint(`<span class="rt-err">✗ LỖI KHÔNG XÁC ĐỊNH: ${reviveEscapeHtml(err && err.message ? err.message : 'đã xảy ra sự cố')}</span>`, { delay: 50 });
+    showToast("Có lỗi xảy ra trong quá trình xử lý!");
+    reviveTermFinish(false);
   }
 }
 
