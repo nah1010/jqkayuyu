@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mc-addons.com/sitemap.xml
+Sitemap: https://addon.tancraft.gt.tc/sitemap.xml
