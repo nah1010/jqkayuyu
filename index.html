@@ -2932,6 +2932,31 @@ function revokePremium() {
 
 let popunderAdLoaded = false;
 
+// Popunder chỉ kích hoạt ở lần bấm ĐẦU TIÊN trong phiên truy cập (không tự chạy lúc vừa vào web).
+// Kiểm tra lại quyền Admin/Premium ngay tại thời điểm bấm để không dẫn quảng cáo cho các tài khoản được miễn.
+function triggerPopunderOnFirstClick() {
+  if (popunderAdLoaded) return;
+  const shouldHideAds = isAdmin || isSubAdmin || isPremium;
+  if (shouldHideAds) return;
+
+  popunderAdLoaded = true;
+
+  const popunderScript1 = document.createElement('script');
+  popunderScript1.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
+  document.body.appendChild(popunderScript1);
+
+  const popunderScript2 = document.createElement('script');
+  popunderScript2.src = 'https://pl31085638.profitableratecpmnetwork.com/bf/b9/cc/bfb9cc20585f009f49c54c4f89bb8fe2.js';
+  document.body.appendChild(popunderScript2);
+
+  // Script thứ 3 (tăng thêm nguồn quảng cáo ~10%) - TẠM dùng lại link script 1
+  // cho đến khi có link mạng quảng cáo thứ 3 thật. Cần thay src bên dưới khi có link chính thức.
+  const popunderScript3 = document.createElement('script');
+  popunderScript3.src = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
+  document.body.appendChild(popunderScript3);
+}
+document.addEventListener('click', triggerPopunderOnFirstClick);
+
 function updateToolLockUI(bannerId, badgeId, linkId, hasAccess) {
   const banner = document.getElementById(bannerId);
   const badge = document.getElementById(badgeId);
@@ -2964,7 +2989,7 @@ function updateAdAndAccessUI() {
   updateToolLockUI('translateToolBanner', 'translateLockBadge', 'translateUpgradeLink', hasAccess);
   updateToolLockUI('editAddonToolBanner', 'editAddonLockBadge', 'editAddonUpgradeLink', hasAccess);
 
-  // Popunder ads đã được gỡ bỏ theo yêu cầu - giảm quảng cáo khi vừa vào web
+  // Popunder không tự chạy lúc vừa vào web nữa - xem triggerPopunderOnFirstClick()
   // Banner quảng cáo 320x50 ở đầu trang vẫn giữ nguyên
 }
 
