@@ -823,6 +823,7 @@ header:focus-within .search-box {
 }
 
 .floating-btn.premium-manage-btn { background-color: #8b5cf6; }
+.floating-btn.sub-admin-manage-btn { background-color: #0ea5e9; }
 .floating-btn.premium-enter-btn { background-color: #eab308; }
 
 .crop-editor-container {
@@ -1592,6 +1593,9 @@ header:focus-within .search-box {
   <button id="premiumManageBtn" class="floating-btn premium-manage-btn" style="display:none; animation-delay: 0.15s;" onclick="openPremiumManageModal()" title="Quản lý Code Premium">
     <i data-lucide="key-round"></i>
   </button>
+  <button id="subAdminManageBtn" class="floating-btn sub-admin-manage-btn" style="display:none; animation-delay: 0.17s;" onclick="openSubAdminManageModal()" title="Quản lý Phó web">
+    <i data-lucide="users"></i>
+  </button>
   <button id="logoutBtn" class="floating-btn logout-btn" style="display:none; animation-delay: 0.2s;" onclick="logoutAdmin()" title="Đăng xuất">
     <i data-lucide="log-out"></i>
   </button>
@@ -1962,6 +1966,37 @@ header:focus-within .search-box {
   </div>
 </div>
 
+<div id="subAdminManageModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="users" style="color:#0ea5e9;"></i> Quản Lý Phó Web</span>
+      <button class="close-x" onclick="closeSubAdminManageModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+        Phó web có thể đăng/sửa/xóa addon của chính mình và dùng mọi công cụ như quyền lợi Premium, nhưng KHÔNG được xóa addon của Admin, KHÔNG được xóa thể loại, và KHÔNG được tạo key Premium.
+      </p>
+      <div class="form-group">
+        <label>Email Phó web mới *</label>
+        <input type="email" id="newSubAdminEmail" placeholder="phoweb@example.com">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu (tối thiểu 6 ký tự) *</label>
+        <input type="password" id="newSubAdminPass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" id="createSubAdminBtn" onclick="submitCreateSubAdmin()"><i data-lucide="user-plus"></i> Tạo Tài Khoản Phó Web</button>
+
+      <div style="margin-top:20px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px; color:var(--text-main);">Danh sách Phó web</label>
+        <div id="subAdminList"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeSubAdminManageModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <div id="enterCodeModal" class="modal-overlay">
   <div class="modal-box" style="max-width:380px;">
     <div class="modal-header">
@@ -2217,7 +2252,7 @@ function populateCatSelect() {
 }
 
 function openNewCatModal() {
-  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  if (!isAdmin && !isSubAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   document.getElementById('newCatName').value = "";
   renderCustomCatList();
   document.getElementById('newCatModal').classList.add('active');
@@ -2235,14 +2270,15 @@ function renderCustomCatList() {
   }
   container.innerHTML = customCategories.map(c => `
     <div class="cat-manage-item">
-      <span>${c.name}</span>
-      <button class="cat-manage-del" onclick="deleteCategory('${c.id}')" title="Xóa thể loại"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+      <span>${escapeHtml(c.name)}</span>
+      ${isSubAdmin ? '' : `<button class="cat-manage-del" onclick="deleteCategory('${c.id}')" title="Xóa thể loại"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>`}
     </div>
   `).join('');
   lucide.createIcons({ root: container });
 }
 
 function deleteCategory(id) {
+  if (isSubAdmin) { showToast("Phó web không có quyền xóa thể loại!"); return; }
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   let catItem = customCategories.find(c => c.id === id);
   if (!catItem) return;
@@ -2404,6 +2440,10 @@ let editCropper = null;
 let selectedAddonId = null;
 let editingId = null;
 let isAdmin = false;
+let isSubAdmin = false;
+let currentUid = null;
+let subAdmins = [];
+let blockedUids = [];
 let isPremium = false;
 let activeCodes = [];
 let codeCountdownInterval = null;
@@ -2547,6 +2587,7 @@ function toggleCustomDeviceLimit() {
 }
 
 function submitGenerateCode() {
+  if (isSubAdmin) { showToast("Phó web không có quyền tạo key Premium!"); return; }
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
 
   let customCodeRaw = document.getElementById('customCodeInput').value.trim();
@@ -2649,6 +2690,7 @@ function startCodeCountdownTicker() {
 }
 
 function deleteCode(id) {
+  if (isSubAdmin) { showToast("Phó web không có quyền quản lý key Premium!"); return; }
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   if (!confirm("Xóa code này? Các máy đã kích hoạt Premium bằng code này sẽ bị thu hồi Premium ngay khi tải lại trang.")) return;
   db.collection("premiumCodes").doc(id).delete().then(() => {
@@ -2666,6 +2708,7 @@ function cleanupExpiredCodes() {
 }
 
 function openPremiumManageModal() {
+  if (isSubAdmin) { showToast("Phó web không có quyền tạo key Premium!"); return; }
   if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   document.getElementById('customCodeInput').value = '';
   document.getElementById('codeDuration').value = '3d';
@@ -2680,6 +2723,102 @@ function openPremiumManageModal() {
 function closePremiumManageModal() {
   document.getElementById('premiumManageModal').classList.remove('active');
   if (codeCountdownInterval) { clearInterval(codeCountdownInterval); codeCountdownInterval = null; }
+}
+
+/* ===== Quản lý tài khoản Phó web =====
+   Firebase Auth không cho tạo user mới trong khi vẫn muốn giữ phiên đăng nhập hiện tại
+   (tạo user mới bằng SDK client sẽ tự động đăng nhập luôn vào user đó).
+   Giải pháp: dùng một Firebase App phụ ("SubAdminCreatorApp") chỉ để tạo tài khoản Auth,
+   sau đó đăng xuất app phụ này ngay - phiên đăng nhập Admin gốc ở app chính không bị ảnh hưởng. */
+function getSubAdminCreatorAuth() {
+  let secondaryApp = firebase.apps.find(a => a.name === 'SubAdminCreatorApp');
+  if (!secondaryApp) {
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'SubAdminCreatorApp');
+  }
+  return secondaryApp.auth();
+}
+
+function openSubAdminManageModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  document.getElementById('newSubAdminEmail').value = '';
+  document.getElementById('newSubAdminPass').value = '';
+  renderSubAdminList();
+  document.getElementById('subAdminManageModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('subAdminManageModal') });
+}
+
+function closeSubAdminManageModal() {
+  document.getElementById('subAdminManageModal').classList.remove('active');
+}
+
+function renderSubAdminList() {
+  let container = document.getElementById('subAdminList');
+  if (subAdmins.length === 0) {
+    container.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">Chưa có Phó web nào.</p>';
+    return;
+  }
+  container.innerHTML = subAdmins.map(s => `
+    <div class="cat-manage-item">
+      <span>${escapeHtml(s.email)}</span>
+      <button class="cat-manage-del" onclick="removeSubAdmin('${s.id}')" title="Thu hồi quyền Phó web"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+    </div>
+  `).join('');
+  lucide.createIcons({ root: container });
+}
+
+function submitCreateSubAdmin() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+
+  let email = document.getElementById('newSubAdminEmail').value.trim();
+  let pass = document.getElementById('newSubAdminPass').value;
+
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { showToast("Vui lòng nhập email hợp lệ!"); return; }
+  if (!pass || pass.length < 6) { showToast("Mật khẩu phải có tối thiểu 6 ký tự!"); return; }
+
+  let btn = document.getElementById('createSubAdminBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Đang tạo...';
+
+  let creatorAuth = getSubAdminCreatorAuth();
+
+  creatorAuth.createUserWithEmailAndPassword(email, pass).then((cred) => {
+    let newUid = cred.user.uid;
+    return db.collection("subAdmins").add({
+      uid: newUid,
+      email: email,
+      createdAt: Date.now()
+    }).then(() => {
+      // Đăng xuất khỏi app phụ để không giữ phiên thừa; phiên Admin gốc ở app chính vẫn nguyên vẹn.
+      return creatorAuth.signOut();
+    });
+  }).then(() => {
+    document.getElementById('newSubAdminEmail').value = '';
+    document.getElementById('newSubAdminPass').value = '';
+    showToast("Đã tạo tài khoản Phó web: " + email);
+  }).catch(e => {
+    let msg = e.message;
+    if (e.code === 'auth/email-already-in-use') msg = "Email này đã được dùng cho tài khoản khác!";
+    showToast(msg);
+  }).finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="user-plus"></i> Tạo Tài Khoản Phó Web';
+    lucide.createIcons({ root: btn });
+  });
+}
+
+function removeSubAdmin(id) {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
+  let s = subAdmins.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`Thu hồi quyền Phó web của "${s.email}"? Tài khoản này sẽ bị chặn đăng nhập vĩnh viễn (không thể quay lại thành Admin hay Phó web nữa).`)) return;
+  // Phải chặn (blockedUids) TRƯỚC khi xóa khỏi subAdmins, để không có khoảnh khắc nào
+  // tài khoản này rơi vào trạng thái "không nằm trong subAdmins" mà chưa bị chặn -
+  // nếu không sẽ bị tính nhầm thành Admin gốc trong lúc chờ.
+  db.collection("blockedUids").doc(s.uid).set({ email: s.email, blockedAt: Date.now() }).then(() => {
+    return db.collection("subAdmins").doc(id).delete();
+  }).then(() => {
+    showToast("Đã thu hồi quyền và chặn tài khoản Phó web!");
+  }).catch(e => showToast(e.message));
 }
 
 function openEnterCodeModal() {
@@ -2812,16 +2951,16 @@ function goToShopFromTools() {
 
 function updateAdAndAccessUI() {
   const adContainer = document.getElementById('adContainer');
-  const shouldHideAds = isAdmin || isPremium;
+  const shouldHideAds = isAdmin || isSubAdmin || isPremium;
   if (adContainer) adContainer.style.display = shouldHideAds ? 'none' : 'flex';
 
   const premiumBadge = document.getElementById('premiumBadge');
   if (premiumBadge) {
-    premiumBadge.style.display = (isPremium && !isAdmin) ? 'inline-flex' : 'none';
+    premiumBadge.style.display = (isPremium && !isAdmin && !isSubAdmin) ? 'inline-flex' : 'none';
     lucide.createIcons({ root: premiumBadge });
   }
 
-  const hasAccess = isAdmin || isPremium;
+  const hasAccess = isAdmin || isSubAdmin || isPremium;
   updateToolLockUI('translateToolBanner', 'translateLockBadge', 'translateUpgradeLink', hasAccess);
   updateToolLockUI('editAddonToolBanner', 'editAddonLockBadge', 'editAddonUpgradeLink', hasAccess);
 
@@ -2829,11 +2968,30 @@ function updateAdAndAccessUI() {
   // Banner quảng cáo 320x50 ở đầu trang vẫn giữ nguyên
 }
 
-firebase.auth().onAuthStateChanged((user) => {
-  isAdmin = !!user;
-  document.getElementById('adminBtn').style.display = isAdmin ? 'flex' : 'none';
+function recomputeAdminRole() {
+  // Được gọi cả khi auth thay đổi lẫn khi danh sách subAdmins/blockedUids thay đổi,
+  // vì vai trò phụ thuộc vào dữ liệu Firestore, không chỉ vào việc đăng nhập.
+  const user = firebase.auth().currentUser;
+
+  // Tài khoản đã bị Admin thu hồi quyền Phó web (blockedUids) thì bị đăng xuất ngay,
+  // để KHÔNG bao giờ có thể tự leo thang thành Admin gốc chỉ vì không còn nằm trong subAdmins.
+  if (user && blockedUids.includes(user.uid)) {
+    firebase.auth().signOut();
+    currentUid = null;
+    isSubAdmin = false;
+    isAdmin = false;
+    return;
+  }
+
+  currentUid = user ? user.uid : null;
+  isSubAdmin = !!(user && subAdmins.some(s => s.uid === user.uid));
+  isAdmin = !!user && !isSubAdmin; // Admin gốc = có đăng nhập & KHÔNG nằm trong danh sách Phó web
+
+  const hasAnyAccess = isAdmin || isSubAdmin;
+  document.getElementById('adminBtn').style.display = hasAnyAccess ? 'flex' : 'none';
   document.getElementById('premiumManageBtn').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('logoutBtn').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('subAdminManageBtn').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('logoutBtn').style.display = hasAnyAccess ? 'flex' : 'none';
 
   updateAdAndAccessUI();
 
@@ -2848,6 +3006,10 @@ firebase.auth().onAuthStateChanged((user) => {
   }
 
   if(addons.length > 0) { renderHome(); renderPopular(); }
+}
+
+firebase.auth().onAuthStateChanged((user) => {
+  recomputeAdminRole();
 });
 
 window.onload = function() {
@@ -2858,6 +3020,29 @@ window.onload = function() {
   initPremiumFromStorage();
   renderShopGrid();
   updateFilterBubbleDot();
+
+  db.collection("blockedUids").onSnapshot((snapshot) => {
+    blockedUids = [];
+    snapshot.forEach((doc) => {
+      blockedUids.push(doc.id); // id của document blockedUids chính là uid bị chặn
+    });
+    recomputeAdminRole();
+  }, (error) => {
+    console.error(error);
+  });
+
+  db.collection("subAdmins").orderBy("createdAt").onSnapshot((snapshot) => {
+    subAdmins = [];
+    snapshot.forEach((doc) => {
+      subAdmins.push({ id: doc.id, ...doc.data() });
+    });
+    recomputeAdminRole();
+    if (document.getElementById('subAdminManageModal').classList.contains('active')) {
+      renderSubAdminList();
+    }
+  }, (error) => {
+    console.error(error);
+  });
 
   db.collection("categories").orderBy("createdAt").onSnapshot((snapshot) => {
     customCategories = [];
@@ -2928,7 +3113,7 @@ function closeConvertModal() {
 }
 
 function openTranslateModal() {
-  if (!isAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
+  if (!isAdmin && !isSubAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
   document.getElementById('translateFileInput').value = '';
   document.getElementById('translateModal').classList.add('active');
   lucide.createIcons({ root: document.getElementById('translateModal') });
@@ -3462,6 +3647,7 @@ function applyCrop() {
 }
 
 function openPostModal() {
+  if (!isAdmin && !isSubAdmin) { showToast("Chức năng này chỉ dành cho Admin!"); return; }
   editingId = null;
   populateCatSelect();
   document.getElementById('postTitle').value = "";
@@ -3486,6 +3672,14 @@ function closePostModal() {
   if (cropper) { cropper.destroy(); cropper = null; }
 }
 
+// Phó web chỉ được sửa/xóa addon do chính mình đăng (ownerUid trùng uid hiện tại).
+// Admin gốc luôn được sửa/xóa mọi addon.
+function canManageAddon(item) {
+  if (isAdmin) return true;
+  if (isSubAdmin) return !!item && item.ownerUid === currentUid;
+  return false;
+}
+
 function submitPost() {
   let title = document.getElementById('postTitle').value.trim();
   let link = document.getElementById('postLink').value.trim();
@@ -3498,6 +3692,17 @@ function submitPost() {
   if (!title || title.length > 30) { showToast("Tên addon trống hoặc quá 30 chữ!"); return; }
   if (!link) { showToast("Vui lòng nhập link addon!"); return; }
   if (!/^https?:\/\//i.test(link)) { showToast("Link addon phải bắt đầu bằng http:// hoặc https://"); return; }
+
+  if (editingId) {
+    let existing = addons.find(a => a.id === editingId);
+    if (!canManageAddon(existing)) {
+      showToast("Bạn chỉ được sửa addon do chính mình đăng!");
+      return;
+    }
+  } else if (!isAdmin && !isSubAdmin) {
+    showToast("Chức năng này chỉ dành cho Admin!");
+    return;
+  }
 
   btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Đang xử lý...';
   btn.style.opacity = '0.7';
@@ -3517,6 +3722,7 @@ function submitPost() {
   } else {
     addonData.img = uploadedImgBase64 || "https://picsum.photos/300/200?random=" + Math.floor(Math.random()*100);
     addonData.views = 0; addonData.createdAt = Date.now();
+    addonData.ownerUid = currentUid;
     db.collection("addons").add(addonData).then(() => {
       closePostModal(); showToast("Đăng bài thành công!");
     }).catch(e => showToast(e.message)).finally(() => resetBtn(btn));
@@ -3525,9 +3731,10 @@ function submitPost() {
 function resetBtn(btn) { btn.disabled = false; btn.style.opacity = '1'; }
 
 function editCurrentAddon() {
-  closeDetailModal();
   let item = addons.find(a => a.id === selectedAddonId);
   if (!item) return;
+  if (!canManageAddon(item)) { showToast("Bạn chỉ được sửa addon do chính mình đăng!"); return; }
+  closeDetailModal();
   editingId = item.id;
   populateCatSelect();
   document.getElementById('postTitle').value = item.title;
@@ -3593,6 +3800,8 @@ function logoutAdmin() { firebase.auth().signOut().then(() => showToast("Đã đ
 
 function deleteAddon(id, event) {
   if (event) event.stopPropagation();
+  let item = addons.find(a => a.id === id);
+  if (!canManageAddon(item)) { showToast("Bạn chỉ được xóa addon do chính mình đăng!"); return; }
   if (!confirm("Bạn có chắc chắn muốn xóa addon này vĩnh viễn?")) return;
   db.collection("addons").doc(id).delete().then(() => {
     closeDetailModal(); showToast("Đã xóa addon!");
@@ -3613,7 +3822,7 @@ function createCard(item) {
     badges += `<span class="badge badge-hot">HOT</span>`;
   }
 
-  let deleteBtnHtml = isAdmin ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : '';
+  let deleteBtnHtml = canManageAddon(item) ? `<button class="card-delete-btn" onclick="deleteAddon('${item.id}', event)"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>` : '';
 
   let safeTitle = escapeHtml(item.title);
   let safeCat = escapeHtml(item.cat);
@@ -3787,7 +3996,7 @@ function openDetail(id) {
   document.getElementById('detailDesc').innerText = item.desc || "Chưa có mô tả chi tiết.";
 
   let footer = document.getElementById('detailFooter');
-  if (isAdmin) {
+  if (canManageAddon(item)) {
     footer.innerHTML = `
       <button class="btn btn-warning" onclick="editCurrentAddon()"><i data-lucide="edit-2" style="width:16px;"></i> Sửa</button>
       <button class="btn btn-danger" onclick="deleteAddon('${item.id}')"><i data-lucide="trash-2" style="width:16px;"></i> Xóa</button>
@@ -3843,7 +4052,7 @@ function switchTab(tabId, el) {
 }
 
 function openEditAddonModal() {
-  if (!isAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
+  if (!isAdmin && !isSubAdmin && !isPremium) { showToast("Chức năng này chỉ dành cho Admin hoặc Premium!"); return; }
   document.getElementById('editAddonFileInput').value = "";
   document.getElementById('editAddonName').value = "";
   document.getElementById('editAddonDesc').value = "";
