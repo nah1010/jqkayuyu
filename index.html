@@ -1459,8 +1459,20 @@ header:focus-within .search-box {
   width: 100%; height: 140px; object-fit: cover; display: block;
 }
 .notif-view-item-body { padding: 12px 14px; }
-.notif-view-item-title { font-weight: 700; font-size: 14.5px; color: var(--text-main); margin-bottom: 4px; }
+.notif-view-item-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.notif-view-item-title { font-weight: 700; font-size: 14.5px; color: var(--text-main); }
 .notif-view-item-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; white-space: pre-wrap; }
+.notif-delete-btn {
+  flex-shrink: 0; background: rgba(239, 68, 68, 0.12); color: var(--danger);
+  border: none; border-radius: 8px;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform var(--dur-base) var(--ease-spring), background var(--dur-fast) var(--ease-ios);
+}
+.notif-delete-btn i { width: 14px; height: 14px; }
+.notif-delete-btn:hover { background: var(--danger); color: white; transform: scale(1.1) rotate(8deg); }
+.notif-delete-btn:active { transform: scale(0.85) rotate(0deg); }
 .notif-view-empty {
   text-align: center; padding: 30px 16px; color: var(--text-muted);
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -4451,13 +4463,26 @@ async function submitNotifSettings() {
 
 function buildNotifItemHtml(n) {
   const imgHtml = n.img ? `<img src="${n.img}" alt="">` : '';
+  const deleteBtnHtml = isAdmin ? `<button class="notif-delete-btn" onclick="deleteNotification('${n.id}', event)" title="Xóa thông báo"><i data-lucide="trash-2"></i></button>` : '';
   return `<div class="notif-view-item">
     ${imgHtml}
     <div class="notif-view-item-body">
-      <div class="notif-view-item-title">${escapeHtml(n.name)}</div>
+      <div class="notif-view-item-title-row">
+        <div class="notif-view-item-title">${escapeHtml(n.name)}</div>
+        ${deleteBtnHtml}
+      </div>
       ${n.desc ? `<div class="notif-view-item-desc">${escapeHtml(n.desc)}</div>` : ''}
     </div>
   </div>`;
+}
+
+function deleteNotification(id, event) {
+  if (event) event.stopPropagation();
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin gốc!"); return; }
+  if (!confirm("Bạn có chắc chắn muốn xóa thông báo này vĩnh viễn?")) return;
+  db.collection('notifications').doc(id).delete().then(() => {
+    showToast("Đã xóa thông báo!");
+  }).catch(e => showToast(e.message));
 }
 
 function loadNotifications() {
@@ -4476,6 +4501,12 @@ function loadNotifications() {
     // "Khi ấn nút nào đó": chấm đỏ trên chuông báo có thông báo loại onClick để người dùng biết mà bấm xem.
     const onClickNotifs = allNotifications.filter(n => Array.isArray(n.funcs) && n.funcs.includes('onClick'));
     document.getElementById('notifBellDot').classList.toggle('show', onClickNotifs.length > 0);
+
+    // Nếu modal xem thông báo đang mở (vd: Admin vừa xóa 1 thông báo), vẽ lại danh sách ngay
+    // để phản ánh thay đổi tức thì, không cần đóng rồi mở lại modal.
+    if (document.getElementById('notifViewModal').classList.contains('active')) {
+      openNotifViewModal();
+    }
   }, err => console.error(err));
 }
 
