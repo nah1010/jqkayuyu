@@ -594,15 +594,17 @@ header:focus-within .search-box {
   display: flex; justify-content: space-around; align-items: center;
   z-index: 90;
   padding-bottom: env(safe-area-inset-bottom);
+  --nav-count: 5;
 }
 
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   color: var(--text-muted); font-size: 11px; font-weight: 500;
   cursor: pointer; background: none; border: none;
-  width: 20%; height: 100%; justify-content: center;
-  position: relative; transition: color var(--dur-base) var(--ease-ios);
+  width: calc(100% / var(--nav-count)); height: 100%; justify-content: center;
+  position: relative; transition: color var(--dur-base) var(--ease-ios), width var(--dur-base) var(--ease-ios);
 }
+.nav-item.nav-item-hidden { display: none; }
 
 .nav-item i { transition: transform var(--dur-base) var(--ease-spring), stroke var(--dur-base) var(--ease-ios); }
 .nav-img-icon { width: 24px; height: 24px; filter: grayscale(1); transition: filter var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-spring); }
@@ -620,10 +622,10 @@ header:focus-within .search-box {
 .nav-item.active span { transform: translateY(-1px); }
 
 .nav-indicator {
-  position: absolute; top: 0; left: 0; height: 3px; width: 20%;
+  position: absolute; top: 0; left: 0; height: 3px; width: calc(100% / var(--nav-count));
   background: var(--primary);
   border-radius: 0 0 4px 4px;
-  transition: transform var(--dur-slow) var(--ease-spring);
+  transition: transform var(--dur-slow) var(--ease-spring), width var(--dur-base) var(--ease-ios);
 }
 
 .nav-item.shop-nav .shop-nav-icon-wrap {
@@ -1404,6 +1406,67 @@ header:focus-within .search-box {
 [data-theme="dark"] .source-pill { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 [data-theme="dark"] .kind-pill { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
 
+/* ===== MỤC CÀI ĐẶT (chỉ Admin gốc) ===== */
+.settings-admin-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+  padding: 2px 8px; border-radius: 100px;
+  box-shadow: 0 2px 5px rgba(99,102,241,0.35);
+  animation: badgePop var(--dur-base) var(--ease-spring) backwards;
+  animation-delay: 0.1s;
+}
+.settings-admin-tag i { width: 10px; height: 10px; }
+
+/* ===== CHỌN CHỨC NĂNG THÔNG BÁO (chip multi-select) ===== */
+.notif-func-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.notif-func-chip {
+  padding: 10px 14px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--bg-main);
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  cursor: pointer; user-select: none; flex: 1; min-width: 140px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: transform var(--dur-fast) var(--ease-spring),
+              background-color var(--dur-base) var(--ease-ios),
+              border-color var(--dur-base) var(--ease-ios),
+              color var(--dur-base) var(--ease-ios);
+}
+.notif-func-chip i { width: 15px; height: 15px; }
+.notif-func-chip:active { transform: scale(0.94); }
+.notif-func-chip.selected {
+  background: var(--primary); border-color: var(--primary);
+  color: white; box-shadow: var(--shadow-primary);
+}
+.notif-func-chip.selected i { animation: chipCheckPop var(--dur-base) var(--ease-spring); }
+
+/* ===== NÚT CHUÔNG THÔNG BÁO (Khi ấn nút nào đó) ===== */
+.floating-btn.notif-bell-btn { background-color: #6366f1; position: relative; }
+.notif-bell-dot {
+  position: absolute; top: -2px; right: -2px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--danger); border: 2px solid var(--card-bg);
+  display: none;
+}
+.notif-bell-dot.show { display: block; animation: badgePop var(--dur-base) var(--ease-spring); }
+
+.notif-view-list { display: flex; flex-direction: column; gap: 12px; }
+.notif-view-item {
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow: hidden; background: var(--bg-main);
+  animation: sectionIn var(--dur-base) var(--ease-snappy);
+}
+.notif-view-item img {
+  width: 100%; height: 140px; object-fit: cover; display: block;
+}
+.notif-view-item-body { padding: 12px 14px; }
+.notif-view-item-title { font-weight: 700; font-size: 14.5px; color: var(--text-main); margin-bottom: 4px; }
+.notif-view-item-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; white-space: pre-wrap; }
+.notif-view-empty {
+  text-align: center; padding: 30px 16px; color: var(--text-muted);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.notif-view-empty i { width: 32px; height: 32px; opacity: 0.5; }
+
 </style>
 </head>
 <body>
@@ -1584,20 +1647,57 @@ header:focus-within .search-box {
     </div>
 
   </div>
+
+  <div id="tabSettings" class="tab-pane">
+    <div class="category-title">
+      <i data-lucide="settings"></i>
+      Cài Đặt
+      <span class="settings-admin-tag"><i data-lucide="shield-check"></i> Admin gốc</span>
+    </div>
+
+    <div class="popular-banner" style="cursor: pointer;" onclick="openPremiumManageModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="key-round" style="color: var(--primary);"></i>
+        Tạo Key Premium
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Tạo và quản lý các mã Code Premium để cấp quyền nâng cao cho người dùng!
+      </p>
+    </div>
+
+    <div class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openSubAdminManageModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="users" style="color: var(--primary);"></i>
+        Tạo Tài Khoản Phó Web
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Cấp quyền Phó web cho tài khoản khác để cùng quản lý addon, code Premium và nhiều hơn nữa!
+      </p>
+    </div>
+
+    <div class="popular-banner" style="cursor: pointer; margin-top: 16px;" onclick="openNotifSettingsModal()">
+      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="bell-ring" style="color: var(--primary);"></i>
+        Cài Đặt Thông Báo
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">
+        Soạn và đăng thông báo mới tới người dùng, hiển thị ngay khi vào web hoặc khi họ ấn xem thông báo!
+      </p>
+    </div>
+
+  </div>
 </div>
 
 <div class="floating-container">
   <button id="adminBtn" class="floating-btn" style="display:none; animation-delay: 0.1s;" onclick="openPostModal()" title="Đăng Addon mới">
     <i data-lucide="plus"></i>
   </button>
-  <button id="premiumManageBtn" class="floating-btn premium-manage-btn" style="display:none; animation-delay: 0.15s;" onclick="openPremiumManageModal()" title="Quản lý Code Premium">
-    <i data-lucide="key-round"></i>
-  </button>
-  <button id="subAdminManageBtn" class="floating-btn sub-admin-manage-btn" style="display:none; animation-delay: 0.17s;" onclick="openSubAdminManageModal()" title="Quản lý Phó web">
-    <i data-lucide="users"></i>
-  </button>
   <button id="logoutBtn" class="floating-btn logout-btn" style="display:none; animation-delay: 0.2s;" onclick="logoutAdmin()" title="Đăng xuất">
     <i data-lucide="log-out"></i>
+  </button>
+  <button id="notifBellBtn" class="floating-btn notif-bell-btn" style="animation-delay: 0.22s;" onclick="openNotifViewModal()" title="Thông báo">
+    <i data-lucide="bell"></i>
+    <span id="notifBellDot" class="notif-bell-dot"></span>
   </button>
   <button id="filterBubbleBtn" class="floating-btn filter-btn" style="animation-delay: 0.25s;" onclick="openFilterModal()" title="Bộ lọc Addon">
     <i data-lucide="menu"></i>
@@ -1632,6 +1732,10 @@ header:focus-within .search-box {
   <button class="nav-item" onclick="switchTab('tabTools', this)">
     <i data-lucide="plus-circle"></i>
     <span>Thêm</span>
+  </button>
+  <button class="nav-item nav-item-hidden" id="settingsNavItem" onclick="switchTab('tabSettings', this)">
+    <i data-lucide="settings"></i>
+    <span>Cài đặt</span>
   </button>
 </nav>
 
@@ -1691,7 +1795,7 @@ header:focus-within .search-box {
       <span class="revive-term-dot r"></span>
       <span class="revive-term-dot y"></span>
       <span class="revive-term-dot g"></span>
-      <span class="revive-term-titletext">hoi-sinh-engine — hardcore-recovery.sh</span>
+      <span class="revive-term-titletext" id="reviveTermTitleText">hoi-sinh-engine — hardcore-recovery.sh</span>
       <button class="revive-term-close" id="reviveTermCloseBtn" onclick="closeReviveTerm()" title="Đóng"><i data-lucide="x"></i></button>
     </div>
     <div class="revive-term-body" id="reviveTermBody"></div>
@@ -2156,6 +2260,88 @@ header:focus-within .search-box {
     </div>
   </div>
 </div>
+
+<div id="notifSettingsModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="bell-ring" style="color:var(--primary);"></i> Cài Đặt Thông Báo</span>
+      <button class="close-x" onclick="closeNotifSettingsModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" style="padding-bottom: 0;">
+      <div class="form-group">
+        <label>Tên</label>
+        <input type="text" id="notifName" placeholder="Nhập tên thông báo..." maxlength="35">
+      </div>
+
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea id="notifDesc" placeholder="Nhập mô tả..." maxlength="350"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Hình ảnh</label>
+        <input type="file" id="notifImgInput" accept=".jpg,.jpeg,.png" onchange="handleNotifImgUpload(event)" style="padding: 8px;">
+
+        <div id="notifCropEditor" class="crop-editor-container">
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;"><i data-lucide="mouse" style="width:12px; display:inline-block;"></i> Lăn chuột để Phóng to/Thu nhỏ. Kéo thả để chọn vùng ảnh.</p>
+          <div class="img-container">
+            <img id="notifImageToCrop" src="">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="zoomNotifCropper(0.1)" title="Phóng to"><i data-lucide="zoom-in"></i></button>
+            <button type="button" class="btn btn-secondary" onclick="zoomNotifCropper(-0.1)" title="Thu nhỏ"><i data-lucide="zoom-out"></i></button>
+            <button type="button" class="btn btn-primary" style="flex:1;" onclick="applyNotifCrop()"><i data-lucide="crop"></i> Cắt Ảnh</button>
+          </div>
+        </div>
+
+        <img id="notifImgPreview" src="" style="display:none; width:100%; height:180px; object-fit:cover; margin-top:12px; border-radius:8px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+      </div>
+
+      <div class="form-group">
+        <label>Chức năng</label>
+        <div class="notif-func-row">
+          <div class="notif-func-chip" id="notifFuncOnLoad" onclick="toggleNotifFunc('onLoad')"><i data-lucide="log-in"></i> Khi vào web</div>
+          <div class="notif-func-chip" id="notifFuncOnClick" onclick="toggleNotifFunc('onClick')"><i data-lucide="mouse-pointer-click"></i> Khi ấn nút nào đó</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNotifSettingsModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="submitNotifSettings()"><i data-lucide="check-circle"></i> Xong</button>
+    </div>
+  </div>
+</div>
+
+<div id="notifViewModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="bell" style="color:var(--primary);"></i> Thông Báo</span>
+      <button class="close-x" onclick="closeNotifViewModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="notifViewContent" class="notif-view-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeNotifViewModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="notifPopupModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="bell-ring" style="color:var(--primary);"></i> Thông Báo Mới</span>
+      <button class="close-x" onclick="closeNotifPopupModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="notifPopupContent" class="notif-view-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:100%;" onclick="closeNotifPopupModal()"><i data-lucide="check-circle"></i> Đã hiểu</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"><i data-lucide="check-circle" style="color: #10b981;"></i> <span id="toastMsg"></span></div>
 
 <script>
@@ -2442,6 +2628,13 @@ let editingId = null;
 let isAdmin = false;
 let isSubAdmin = false;
 let currentUid = null;
+
+/* ===== HỆ THỐNG THÔNG BÁO ===== */
+let notifImgBase64 = "";
+let notifCropper = null;
+let notifSelectedFuncs = []; // 'onLoad' | 'onClick'
+let allNotifications = []; // toàn bộ thông báo đã đăng, mới nhất trước
+let seenNotifPopupIds = JSON.parse(localStorage.getItem('mc_seen_notif_popups')) || [];
 let subAdmins = [];
 let blockedUids = [];
 let isPremium = false;
@@ -2957,6 +3150,33 @@ function triggerPopunderOnFirstClick() {
 }
 document.addEventListener('click', triggerPopunderOnFirstClick);
 
+/* ================= CHẶN 3 POPUNDER TRƯỚC KHI DÙNG TÍNH NĂNG CAO CẤP =================
+   Áp dụng cho 4 nút: Việt hoá, Chỉnh sửa addon, Thay đổi chức năng addon, Hồi Sinh Hardcore.
+   MIỄN hoàn toàn cho Admin/Phó web/Premium (giữ đúng chính sách miễn quảng cáo hiện có).
+   Người dùng thường: mỗi lần bấm 1 trong 4 nút trên đều phải kích hoạt đủ 3 popunder mới,
+   không dùng chung "popunderAdLoaded" ở trên (cái đó chỉ chạy 1 lần/phiên cho toàn trang). */
+function fireThreePopunders() {
+  const src1 = 'https://pl31085294.profitableratecpmnetwork.com/e0/67/e0/e067e025ec7cf59515cd070a0b34d945.js';
+  const src2 = 'https://pl31085638.profitableratecpmnetwork.com/bf/b9/cc/bfb9cc20585f009f49c54c4f89bb8fe2.js';
+  const src3 = src1; // TẠM dùng lại link 1 - xem chú thích tại triggerPopunderOnFirstClick()
+  [src1, src2, src3].forEach((src, i) => {
+    setTimeout(() => {
+      const s = document.createElement('script');
+      s.src = src + (src.includes('?') ? '&' : '?') + 'gate=' + Date.now() + '_' + i;
+      document.body.appendChild(s);
+    }, i * 260);
+  });
+}
+
+function ensurePopunderGate3x() {
+  return new Promise((resolve) => {
+    const isExempt = isAdmin || isSubAdmin || isPremium;
+    if (isExempt) { resolve(true); return; }
+    fireThreePopunders();
+    setTimeout(() => resolve(true), 3 * 260 + 200);
+  });
+}
+
 function updateToolLockUI(bannerId, badgeId, linkId, hasAccess) {
   const banner = document.getElementById(bannerId);
   const badge = document.getElementById(badgeId);
@@ -3014,9 +3234,22 @@ function recomputeAdminRole() {
 
   const hasAnyAccess = isAdmin || isSubAdmin;
   document.getElementById('adminBtn').style.display = hasAnyAccess ? 'flex' : 'none';
-  document.getElementById('premiumManageBtn').style.display = isAdmin ? 'flex' : 'none';
-  document.getElementById('subAdminManageBtn').style.display = isAdmin ? 'flex' : 'none';
   document.getElementById('logoutBtn').style.display = hasAnyAccess ? 'flex' : 'none';
+
+  const settingsNavItem = document.getElementById('settingsNavItem');
+  if (settingsNavItem) {
+    settingsNavItem.classList.toggle('nav-item-hidden', !isAdmin);
+    // Nếu đang xem tab Cài đặt mà vừa mất quyền Admin gốc (vd: bị đăng xuất), quay về Trang chủ
+    // để tránh kẹt lại 1 tab người dùng không còn quyền xem.
+    if (!isAdmin) {
+      const settingsPane = document.getElementById('tabSettings');
+      if (settingsPane && settingsPane.classList.contains('active')) {
+        const homeNavBtn = document.querySelector('.nav-item[onclick*="tabHome"]');
+        if (homeNavBtn) switchTab('tabHome', homeNavBtn);
+      }
+    }
+  }
+  updateNavCount();
 
   updateAdAndAccessUI();
 
@@ -3114,6 +3347,8 @@ window.onload = function() {
   }, (error) => {
     console.error(error);
   });
+
+  loadNotifications();
 };
 
 function showToast(msg) {
@@ -3197,10 +3432,17 @@ async function submitTranslateAddon() {
     return;
   }
 
-  showToast("ĐANG VIỆT HOÁ, VUI LÒNG ĐỢI VÀI PHÚT...");
+  await ensurePopunderGate3x();
+
   closeTranslateModal();
+  openReviveTerm('viet-hoa-engine — auto-translate.sh');
+
+  await reviveTermPrint(`<span class="rt-accent">$ ./viet-hoa --input "${reviveEscapeHtml(file.name)}" --mode=auto-translate</span>`, { delay: 120 });
+  await reviveTermPrint(`<span class="rt-dim">Việt Hoá Addon Engine v1.0 — khởi động...</span>`, { delay: 200 });
+  await reviveTermPrint(`<span class="rt-dim">Kích thước file: ${(file.size / (1024*1024)).toFixed(2)} MB</span>`, { delay: 150 });
 
   try {
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 1/4]</span> Đang giải nén addon...`, { delay: 120 });
     const renamedFile = new File([file], file.name + ".zip", { type: "application/zip" });
     const zip = new JSZip();
     let loadedZip;
@@ -3208,10 +3450,15 @@ async function submitTranslateAddon() {
     try {
       loadedZip = await zip.loadAsync(renamedFile);
     } catch (e) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không thể giải nén addon! File có thể bị hỏng hoặc không đúng định dạng .mcaddon</span>`, { delay: 50 });
       showToast("Không thể giải nén addon, hãy kiểm tra lại file");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermSpam('unzip', 5);
+    await reviveTermPrint(`<span class="rt-ok">✓ Giải nén thành công (${Object.keys(loadedZip.files).length} mục)</span>`, { delay: 140 });
 
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 2/4]</span> Đang dò tìm Behavior Pack...`, { delay: 120 });
     let directories = new Set();
     loadedZip.forEach((relativePath) => {
       let firstDir = relativePath.split('/')[0];
@@ -3231,10 +3478,14 @@ async function submitTranslateAddon() {
     }
 
     if (!bpDir) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Addon này chỉ chứa Resource Pack, không thể dịch!</span>`, { delay: 50 });
       showToast("Lỗi: Addon này chỉ chứa Resource Pack, không thể dịch!");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermPrint(`<span class="rt-ok">✓ Tìm thấy Behavior Pack: ${reviveEscapeHtml(bpDir)}/</span>`, { delay: 140 });
 
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 3/4]</span> Đang quét và dịch chuỗi tiếng Anh → tiếng Việt...`, { delay: 120 });
     let filePromises = [];
     
     for (let relativePath in loadedZip.files) {
@@ -3243,19 +3494,26 @@ async function submitTranslateAddon() {
           continue;
         }
         if (relativePath.endsWith('.json') || relativePath.endsWith('.js')) {
-          filePromises.push(async () => {
+          filePromises.push({ path: relativePath, task: async () => {
             let fileData = await loadedZip.file(relativePath).async("string");
             let translatedData = await processTextTranslation(fileData);
             loadedZip.file(relativePath, translatedData);
-          });
+          }});
         }
       }
     }
 
-    for (let task of filePromises) {
-      await task();
+    let doneCount = 0;
+    for (let item of filePromises) {
+      await item.task();
+      doneCount++;
+      if (doneCount % 3 === 0 || doneCount === filePromises.length) {
+        await reviveTermPrint(`<span class="rt-dim">[translate]</span> <span class="rt-tag">${doneCount}/${filePromises.length}</span> <span class="rt-dim">file đã xử lý · gần nhất: ${reviveEscapeHtml(item.path.split('/').pop())}</span>`, { delay: 20 });
+      }
     }
+    await reviveTermPrint(`<span class="rt-ok">✓ Đã dịch xong ${filePromises.length} file</span>`, { delay: 140 });
 
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 4/4]</span> Đang đóng gói addon đã Việt hoá...`, { delay: 120 });
     const content = await loadedZip.generateAsync({ type: "blob" });
     const downloadLink = document.createElement('a');
     downloadLink.href = URL.createObjectURL(content);
@@ -3264,11 +3522,15 @@ async function submitTranslateAddon() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 
+    await reviveTermPrint(`<span class="rt-ok">✓ HOÀN TẤT! Đã Việt hoá và tải file addon thành công.</span>`, { delay: 100 });
     showToast("Đã Việt hoá và tải file addon thành công!");
+    reviveTermFinish(true);
 
   } catch (err) {
     console.error(err);
+    await reviveTermPrint(`<span class="rt-err">✗ LỖI: Có sự cố xảy ra trong quá trình xử lý!</span>`, { delay: 50 });
     showToast("Có lỗi xảy ra trong quá trình xử lý!");
+    reviveTermFinish(false);
   }
 }
 
@@ -3293,10 +3555,18 @@ async function submitConvertAddon() {
     return;
   }
 
-  showToast("VUI LÒNG ĐỢI TÔI VÀI PHÚT...");
+  await ensurePopunderGate3x();
+
   closeConvertModal();
+  openReviveTerm('convert-engine — change-function.sh');
+
+  const optionLabel = option === "no_loss" ? "khong-mat-thanh-tuu" : "mat-thanh-tuu";
+  await reviveTermPrint(`<span class="rt-accent">$ ./thay-doi-chuc-nang --input "${reviveEscapeHtml(file.name)}" --mode=${optionLabel}</span>`, { delay: 120 });
+  await reviveTermPrint(`<span class="rt-dim">Thay Đổi Chức Năng Addon Engine v1.0 — khởi động...</span>`, { delay: 200 });
+  await reviveTermPrint(`<span class="rt-dim">Kích thước file: ${(file.size / (1024*1024)).toFixed(2)} MB</span>`, { delay: 150 });
 
   try {
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 1/3]</span> Đang giải nén addon...`, { delay: 120 });
     const renamedFileName = file.name + ".zip";
     const renamedFile = new File([file], renamedFileName, { type: "application/zip" });
 
@@ -3305,9 +3575,16 @@ async function submitConvertAddon() {
     try {
       loadedZip = await zip.loadAsync(renamedFile);
     } catch (e) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không thể giải nén addon! File có thể bị hỏng hoặc không đúng định dạng.</span>`, { delay: 50 });
       showToast("Không thể giải nén addon, hãy kiểm tra lại");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermSpam('unzip', 5);
+    await reviveTermPrint(`<span class="rt-ok">✓ Giải nén thành công (${Object.keys(loadedZip.files).length} mục)</span>`, { delay: 140 });
+
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 2/3]</span> Đang dò tìm manifest.json...`, { delay: 120 });
+    await reviveTermSpam('scan', 4);
 
     const manifestPaths = [];
     loadedZip.forEach((relativePath) => {
@@ -3317,7 +3594,9 @@ async function submitConvertAddon() {
     });
 
     if (manifestPaths.length === 0) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không tìm thấy manifest trong addon này!</span>`, { delay: 50 });
       showToast("Không tìm thấy manifest");
+      reviveTermFinish(false);
       return;
     }
 
@@ -3345,19 +3624,25 @@ async function submitConvertAddon() {
 
     const manifestFile = loadedZip.file(targetManifestPath);
     if (!manifestFile) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không tìm thấy manifest để chỉnh sửa!</span>`, { delay: 50 });
       showToast("Không tìm thấy manifest để chỉnh sửa");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermPrint(`<span class="rt-ok">✓ Tìm thấy manifest: ${reviveEscapeHtml(targetManifestPath)}</span>`, { delay: 140 });
 
     const manifestText = await manifestFile.async("string");
     let manifestJson;
     try {
       manifestJson = JSON.parse(manifestText);
     } catch (e) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: File manifest.json bị lỗi định dạng!</span>`, { delay: 50 });
       showToast("File manifest.json bị lỗi định dạng!");
+      reviveTermFinish(false);
       return;
     }
 
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 3/3]</span> Đang ghi lại cờ product_type (${optionLabel})...`, { delay: 120 });
     if (option === "no_loss") {
       if (!manifestJson.metadata) manifestJson.metadata = {};
       manifestJson.metadata.product_type = "addon";
@@ -3376,11 +3661,15 @@ async function submitConvertAddon() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 
+    await reviveTermPrint(`<span class="rt-ok">✓ HOÀN TẤT! Đã xử lý và tải file addon mới thành công.</span>`, { delay: 100 });
     showToast("Đã xử lý và tải file addon mới thành công!");
+    reviveTermFinish(true);
 
   } catch (err) {
     console.error(err);
+    await reviveTermPrint(`<span class="rt-err">✗ LỖI: Có sự cố xảy ra trong quá trình xử lý!</span>`, { delay: 50 });
     showToast("Có lỗi xảy ra trong quá trình xử lý!");
+    reviveTermFinish(false);
   }
 }
 
@@ -3397,9 +3686,10 @@ function closeReviveModal() {
 
 let reviveTermBusy = false;
 
-function openReviveTerm() {
+function openReviveTerm(title) {
   const body = document.getElementById('reviveTermBody');
   body.innerHTML = '';
+  document.getElementById('reviveTermTitleText').textContent = title || 'hoi-sinh-engine — hardcore-recovery.sh';
   const cancelBtn = document.getElementById('reviveTermCancelBtn');
   const closeXBtn = document.getElementById('reviveTermCloseBtn');
   cancelBtn.textContent = 'Đang xử lý...';
@@ -3504,6 +3794,8 @@ async function submitReviveWorld() {
     showToast("File vượt quá 500MB cho phép!");
     return;
   }
+
+  await ensurePopunderGate3x();
 
   closeReviveModal();
   openReviveTerm();
@@ -4054,6 +4346,190 @@ function downloadCurrentAddon() {
   closeDetailModal();
 }
 
+/* ================= HỆ THỐNG THÔNG BÁO ================= */
+
+function openNotifSettingsModal() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin gốc!"); return; }
+  document.getElementById('notifName').value = "";
+  document.getElementById('notifDesc').value = "";
+  document.getElementById('notifImgInput').value = "";
+  document.getElementById('notifImgPreview').style.display = 'none';
+  document.getElementById('notifCropEditor').style.display = 'none';
+  notifImgBase64 = "";
+  if (notifCropper) { notifCropper.destroy(); notifCropper = null; }
+  notifSelectedFuncs = [];
+  document.getElementById('notifFuncOnLoad').classList.remove('selected');
+  document.getElementById('notifFuncOnClick').classList.remove('selected');
+
+  document.getElementById('notifSettingsModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('notifSettingsModal') });
+}
+
+function closeNotifSettingsModal() {
+  document.getElementById('notifSettingsModal').classList.remove('active');
+  if (notifCropper) { notifCropper.destroy(); notifCropper = null; }
+}
+
+function handleNotifImgUpload(e) {
+  let file = e.target.files[0];
+  if (!file) return;
+
+  let ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'webp' || !['jpg', 'jpeg', 'png'].includes(ext)) {
+    showToast("Lỗi: Chỉ nhận ảnh đuôi jpg, jpeg, png!");
+    e.target.value = "";
+    return;
+  }
+
+  let reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('notifImgPreview').style.display = 'none';
+    document.getElementById('notifCropEditor').style.display = 'block';
+    let imgElement = document.getElementById('notifImageToCrop');
+    imgElement.src = evt.target.result;
+
+    if (notifCropper) notifCropper.destroy();
+    notifCropper = new Cropper(imgElement, {
+      aspectRatio: 16 / 9, viewMode: 1, autoCropArea: 1, zoomable: true, background: false
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function zoomNotifCropper(ratio) { if (notifCropper) notifCropper.zoom(ratio); }
+
+function applyNotifCrop() {
+  if (!notifCropper) return;
+  let canvas = notifCropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 450 });
+  notifImgBase64 = canvas.toDataURL("image/jpeg", 0.9);
+  notifCropper.destroy(); notifCropper = null;
+  document.getElementById('notifCropEditor').style.display = 'none';
+  let preview = document.getElementById('notifImgPreview');
+  preview.src = notifImgBase64;
+  preview.style.display = 'block';
+  showToast("Lưu ảnh thành công!");
+}
+
+function toggleNotifFunc(key) {
+  const idx = notifSelectedFuncs.indexOf(key);
+  if (idx === -1) notifSelectedFuncs.push(key); else notifSelectedFuncs.splice(idx, 1);
+  const elId = key === 'onLoad' ? 'notifFuncOnLoad' : 'notifFuncOnClick';
+  document.getElementById(elId).classList.toggle('selected', notifSelectedFuncs.includes(key));
+}
+
+async function submitNotifSettings() {
+  if (!isAdmin) { showToast("Chức năng này chỉ dành cho Admin gốc!"); return; }
+
+  const nameVal = document.getElementById('notifName').value.trim();
+  const descVal = document.getElementById('notifDesc').value.trim();
+
+  if (nameVal.length < 5) { showToast("Tên phải có tối thiểu 5 chữ!"); return; }
+  if (nameVal.length > 35) { showToast("Tên tối đa 35 chữ!"); return; }
+  if (descVal.length > 350) { showToast("Mô tả tối đa 350 chữ!"); return; }
+  if (notifSelectedFuncs.length === 0) { showToast("Vui lòng chọn ít nhất 1 chức năng!"); return; }
+
+  showToast("Đang đăng thông báo...");
+
+  try {
+    const docData = {
+      name: nameVal,
+      desc: descVal,
+      img: notifImgBase64 || "",
+      funcs: notifSelectedFuncs.slice(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now()
+    };
+    await db.collection('notifications').add(docData);
+    showToast("Đã đăng thông báo thành công!");
+    closeNotifSettingsModal();
+    loadNotifications();
+  } catch (err) {
+    console.error(err);
+    showToast("Có lỗi xảy ra khi đăng thông báo!");
+  }
+}
+
+function buildNotifItemHtml(n) {
+  const imgHtml = n.img ? `<img src="${n.img}" alt="">` : '';
+  return `<div class="notif-view-item">
+    ${imgHtml}
+    <div class="notif-view-item-body">
+      <div class="notif-view-item-title">${escapeHtml(n.name)}</div>
+      ${n.desc ? `<div class="notif-view-item-desc">${escapeHtml(n.desc)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function loadNotifications() {
+  db.collection('notifications').orderBy('createdAtMs', 'desc').limit(30).onSnapshot(snap => {
+    allNotifications = [];
+    snap.forEach(doc => allNotifications.push({ id: doc.id, ...doc.data() }));
+
+    // "Khi vào web": lấy thông báo mới nhất thuộc loại onLoad mà thiết bị này CHƯA thấy qua,
+    // hiện popup ngay một lần rồi ghi nhớ lại (không hiện lại mỗi lần tải trang).
+    const onLoadNotifs = allNotifications.filter(n => Array.isArray(n.funcs) && n.funcs.includes('onLoad'));
+    const unseen = onLoadNotifs.filter(n => !seenNotifPopupIds.includes(n.id));
+    if (unseen.length > 0) {
+      showNotifPopup(unseen);
+    }
+
+    // "Khi ấn nút nào đó": chấm đỏ trên chuông báo có thông báo loại onClick để người dùng biết mà bấm xem.
+    const onClickNotifs = allNotifications.filter(n => Array.isArray(n.funcs) && n.funcs.includes('onClick'));
+    document.getElementById('notifBellDot').classList.toggle('show', onClickNotifs.length > 0);
+  }, err => console.error(err));
+}
+
+function showNotifPopup(list) {
+  const content = document.getElementById('notifPopupContent');
+  content.innerHTML = list.map(buildNotifItemHtml).join('');
+  document.getElementById('notifPopupModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('notifPopupModal') });
+
+  list.forEach(n => { if (!seenNotifPopupIds.includes(n.id)) seenNotifPopupIds.push(n.id); });
+  localStorage.setItem('mc_seen_notif_popups', JSON.stringify(seenNotifPopupIds));
+}
+
+function closeNotifPopupModal() {
+  document.getElementById('notifPopupModal').classList.remove('active');
+}
+
+function openNotifViewModal() {
+  const onClickNotifs = allNotifications.filter(n => Array.isArray(n.funcs) && n.funcs.includes('onClick'));
+  const content = document.getElementById('notifViewContent');
+
+  if (onClickNotifs.length === 0) {
+    content.innerHTML = `<div class="notif-view-empty"><i data-lucide="bell-off"></i><span>Chưa có thông báo nào</span></div>`;
+  } else {
+    content.innerHTML = onClickNotifs.map(buildNotifItemHtml).join('');
+  }
+
+  document.getElementById('notifViewModal').classList.add('active');
+  lucide.createIcons({ root: document.getElementById('notifViewModal') });
+  document.getElementById('notifBellDot').classList.remove('show');
+}
+
+function closeNotifViewModal() {
+  document.getElementById('notifViewModal').classList.remove('active');
+}
+
+// Tính lại số nav-item đang HIỂN THỊ thực tế (không tính mục đang ẩn như "Cài đặt" khi
+// không phải Admin gốc) để chia đều chiều rộng nav bar + vị trí thanh chỉ báo (nav-indicator).
+function updateNavCount() {
+  const nav = document.querySelector('.bottom-nav');
+  if (!nav) return;
+  const visibleCount = Array.from(nav.querySelectorAll('.nav-item'))
+    .filter(n => !n.classList.contains('nav-item-hidden')).length;
+  nav.style.setProperty('--nav-count', visibleCount);
+
+  // Nav item đang active có thể đã đổi vị trí tương đối (vd: mất mục Cài đặt phía trước nó
+  // trong DOM) - tính lại translateX cho thanh chỉ báo để không bị lệch.
+  const activeBtn = nav.querySelector('.nav-item.active');
+  if (activeBtn) {
+    const idx = Array.from(nav.children).filter(c => c.classList.contains('nav-item') && !c.classList.contains('nav-item-hidden')).indexOf(activeBtn);
+    if (idx >= 0) document.getElementById('navIndicator').style.transform = `translateX(${idx * 100}%)`;
+  }
+}
+
 function switchTab(tabId, el) {
   const currentActive = document.querySelector('.tab-pane.active');
   if (currentActive && currentActive.id === tabId) return;
@@ -4065,7 +4541,7 @@ function switchTab(tabId, el) {
   nextPane.classList.add('active');
   el.classList.add('active');
 
-  let index = Array.from(el.parentNode.children).filter(c => c.classList.contains('nav-item')).indexOf(el);
+  let index = Array.from(el.parentNode.children).filter(c => c.classList.contains('nav-item') && !c.classList.contains('nav-item-hidden')).indexOf(el);
   document.getElementById('navIndicator').style.transform = `translateX(${index * 100}%)`;
 
   if(tabId === 'tabDownloaded') renderDownloaded();
@@ -4174,10 +4650,17 @@ async function submitEditAddon() {
 
   if (editCropper) applyEditCrop();
 
-  showToast("ĐANG XỬ LÝ ADDON, VUI LÒNG ĐỢI...");
+  await ensurePopunderGate3x();
+
   closeEditAddonModal();
+  openReviveTerm('edit-addon-engine — patch-manifest.sh');
+
+  await reviveTermPrint(`<span class="rt-accent">$ ./chinh-sua-addon --input "${reviveEscapeHtml(file.name)}" --mode=patch-manifest</span>`, { delay: 120 });
+  await reviveTermPrint(`<span class="rt-dim">Chỉnh Sửa Addon Engine v1.0 — khởi động...</span>`, { delay: 200 });
+  await reviveTermPrint(`<span class="rt-dim">Kích thước file: ${(file.size / (1024*1024)).toFixed(2)} MB</span>`, { delay: 150 });
 
   try {
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 1/3]</span> Đang giải nén addon...`, { delay: 120 });
     const renamedFile = new File([file], file.name + ".zip", { type: "application/zip" });
     const zip = new JSZip();
     let loadedZip;
@@ -4185,9 +4668,16 @@ async function submitEditAddon() {
     try {
       loadedZip = await zip.loadAsync(renamedFile);
     } catch (e) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không thể giải nén addon!</span>`, { delay: 50 });
       showToast("Lỗi: Không thể giải nén addon");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermSpam('unzip', 5);
+    await reviveTermPrint(`<span class="rt-ok">✓ Giải nén thành công (${Object.keys(loadedZip.files).length} mục)</span>`, { delay: 140 });
+
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 2/3]</span> Đang dò tìm manifest Behavior & Resource pack...`, { delay: 120 });
+    await reviveTermSpam('scan', 4);
 
     let manifestPaths = [];
     loadedZip.forEach((relativePath) => {
@@ -4197,10 +4687,14 @@ async function submitEditAddon() {
     });
 
     if (manifestPaths.length < 2) {
+      await reviveTermPrint(`<span class="rt-err">✗ LỖI: Không tìm thấy đủ manifest trong Behavior và Resource pack!</span>`, { delay: 50 });
       showToast("Lỗi: Không tìm thấy đủ manifest trong Behavior và Resource pack!");
+      reviveTermFinish(false);
       return;
     }
+    await reviveTermPrint(`<span class="rt-ok">✓ Tìm thấy ${manifestPaths.length} manifest</span>`, { delay: 140 });
 
+    await reviveTermPrint(`<span class="rt-tag">[BƯỚC 3/3]</span> Đang ghi đè tên/mô tả/icon vào từng manifest...`, { delay: 120 });
     for (let mPath of manifestPaths) {
       let manifestFile = loadedZip.file(mPath);
       let manifestText = await manifestFile.async("string");
@@ -4209,6 +4703,7 @@ async function submitEditAddon() {
       try {
         manifestJson = JSON.parse(manifestText);
       } catch(e) {
+        await reviveTermPrint(`<span class="rt-dim">[patch]</span> <span class="rt-dim">Bỏ qua ${reviveEscapeHtml(mPath)} (lỗi định dạng JSON)</span>`, { delay: 20 });
         continue;
       }
 
@@ -4231,6 +4726,8 @@ async function submitEditAddon() {
         let base64Data = editUploadedImgBase64.split(',')[1];
         loadedZip.file(iconPath, base64Data, {base64: true});
       }
+
+      await reviveTermPrint(`<span class="rt-dim">[patch]</span> <span class="rt-ok">✓</span> <span class="rt-dim">${reviveEscapeHtml(mPath)}</span>`, { delay: 30 });
     }
 
     const content = await loadedZip.generateAsync({ type: "blob" });
@@ -4241,11 +4738,15 @@ async function submitEditAddon() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 
+    await reviveTermPrint(`<span class="rt-ok">✓ HOÀN TẤT! Đã sửa và tải file addon thành công.</span>`, { delay: 100 });
     showToast("Đã sửa và tải file addon thành công!");
+    reviveTermFinish(true);
 
   } catch (err) {
     console.error(err);
+    await reviveTermPrint(`<span class="rt-err">✗ LỖI: Có sự cố xảy ra trong quá trình xử lý!</span>`, { delay: 50 });
     showToast("Có lỗi xảy ra trong quá trình xử lý!");
+    reviveTermFinish(false);
   }
 }
 </script>
